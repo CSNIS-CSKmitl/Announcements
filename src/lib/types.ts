@@ -5,7 +5,7 @@ export interface Announcement {
   start_at: string; end_at: string; link_label: string; link_url: string; source_url: string;
   revision: string; created: string; updated: string;
 }
-export const sites = [{ id: 'initd', name: 'init.d' }, { id: 'printer', name: 'Printer-server' }] as const;
+export const sites = [{ id: 'initd', name: 'init.d' }, { id: 'printer', name: 'Printer-server' }, { id: 'android', name: 'Android app' }] as const;
 export const priorityLabels = { info: 'ทั่วไป', important: 'สำคัญ', emergency: 'ฉุกเฉิน' } as const;
 export function displayState(item: Announcement, now = Date.now()) {
   if (item.status === 'draft') return 'ฉบับร่าง';
@@ -15,5 +15,5 @@ export function displayState(item: Announcement, now = Date.now()) {
   return 'กำลังแสดง';
 }
 export function targetLabel(targets: string[]) {
-  return targets.includes('all') ? 'ทุกเว็บ' : sites.filter(site => targets.includes(site.id)).map(site => site.name).join(', ');
+  return targets.includes('all') ? 'ทุกเว็บและ Android' : sites.filter(site => targets.includes(site.id)).map(site => site.name).join(', ');
 }

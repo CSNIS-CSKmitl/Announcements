@@ -24,7 +24,7 @@ const schema = {
     { type: 'text', name: 'body', required: true, max: 6000 },
     { type: 'select', name: 'priority', required: true, maxSelect: 1, values: ['info', 'important', 'emergency'] },
     { type: 'select', name: 'status', required: true, maxSelect: 1, values: ['draft', 'published', 'archived'] },
-    { type: 'select', name: 'targets', required: true, maxSelect: 3, values: ['all', 'initd', 'printer'] },
+    { type: 'select', name: 'targets', required: true, maxSelect: 4, values: ['all', 'initd', 'printer', 'android'] },
     { type: 'date', name: 'start_at' }, { type: 'date', name: 'end_at' },
     { type: 'text', name: 'link_label', max: 80 }, { type: 'url', name: 'link_url' }, { type: 'url', name: 'source_url' },
     { type: 'text', name: 'revision', required: true, max: 100 },

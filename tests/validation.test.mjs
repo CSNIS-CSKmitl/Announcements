@@ -16,6 +16,8 @@ test('requires valid recipients, status and priority', () => {
   assert.ok(validateAnnouncement({ ...base, targets: ['unknown'] }).errors.targets);
   assert.ok(validateAnnouncement({ ...base, status: 'deleted', priority: 'urgent' }).errors.status);
   assert.deepEqual(validateAnnouncement({ ...base, targets: ['all', 'printer'] }).data.targets, ['all']);
+  assert.deepEqual(validateAnnouncement({ ...base, targets: ['android'] }).errors, {});
+  assert.deepEqual(validateAnnouncement({ ...base, targets: ['android', 'printer'] }).data.targets, ['android', 'printer']);
 });
 test('Bangkok schedule converts consistently and invalid calendars are rejected', () => {
   const result = validateAnnouncement({ ...base, start_at: '2026-09-26T12:00', end_at: '2026-09-26T13:00' });
