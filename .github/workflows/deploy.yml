@@ -1,0 +1,240 @@
+name: Deploy Announcements
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: announcements-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: github.ref == 'refs/heads/main'
+    environment: env
+    # Use the runner that already has SSH access to the deployment server.
+    # Add its custom label here if multiple Linux runners are registered.
+    runs-on: [self-hosted, linux]
+    timeout-minutes: 20
+    defaults:
+      run:
+        shell: bash
+    env:
+      # Match .env: the browser connects through this app's PocketBase proxy.
+      VITE_POCKETBASE_URL: ${{ vars.VITE_POCKETBASE_URL || '/api/db' }}
+      SSH_HOST: ${{ secrets.SSH_HOST }}
+      SSH_USER: ${{ secrets.SSH_USER }}
+      DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
+      PM2_APP_NAME: ${{ vars.PM2_APP_NAME || 'announcements' }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          package-manager-cache: false
+
+      - name: Validate configuration
+        env:
+          ENV_FILE: ${{ secrets.ENV_FILE }}
+        run: |
+          set -euo pipefail
+          for name in SSH_HOST SSH_USER DEPLOY_PATH ENV_FILE; do
+            if [[ -z "${!name}" ]]; then
+              echo "::error::Missing GitHub Actions secret or variable: $name"
+              exit 1
+            fi
+          done
+          # Keep values safe for SSH's remote command parsing and rsync paths.
+          fail() { echo "::error::$1"; exit 1; }
+          [[ "$SSH_HOST" =~ ^[a-zA-Z0-9][a-zA-Z0-9.-]*$ ]] || fail 'SSH_HOST must be a hostname or IPv4 address without a URL scheme, user or port.'
+          [[ "$SSH_USER" =~ ^[a-zA-Z_][a-zA-Z0-9_-]*$ ]] || fail 'SSH_USER must be a Linux username.'
+          [[ "$DEPLOY_PATH" =~ ^/[a-zA-Z0-9_./-]+$ && "$DEPLOY_PATH" != / ]] || fail 'DEPLOY_PATH must be an absolute directory path without spaces, such as /root/init.d.'
+          [[ "/${DEPLOY_PATH#/}/" != *"/../"* ]] || fail 'DEPLOY_PATH must not contain a .. path component.'
+          [[ "$PM2_APP_NAME" =~ ^[a-zA-Z0-9][a-zA-Z0-9_.-]*$ ]] || fail 'PM2_APP_NAME must contain only letters, numbers, dots, underscores or hyphens and start with a letter or number.'
+          for command in ssh rsync; do
+            command -v "$command" >/dev/null || fail "Required command is missing on the runner: $command"
+          done
+          echo 'Deploy configuration validated.'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check application
+        run: npm run check
+
+      - name: Build application
+        run: npm run build
+
+      - name: Transfer files and restart PM2
+        env:
+          ENV_FILE: ${{ secrets.ENV_FILE }}
+        run: |
+          set -Eeuo pipefail
+          stage='prepare temporary deploy files'
+          trap 'status=$?; echo "::error::Deploy failed during: $stage (line $LINENO, exit $status)"; exit "$status"' ERR
+          echo 'Preparing deploy files.'
+          deploy_temp=$(mktemp -d "$RUNNER_TEMP/announcements-deploy.XXXXXX")
+          trap 'rm -rf -- "$deploy_temp"' EXIT
+          # Keep production credentials outside checkout and build artifacts.
+          (umask 077; printf '%s\n' "$ENV_FILE" > "$deploy_temp/.env")
+          unset ENV_FILE
+          # Use the runner user's existing SSH config, keys/agent and known_hosts.
+          ssh_options=(-o BatchMode=yes
+            -o StrictHostKeyChecking=yes -o ConnectTimeout=15)
+          remote="$SSH_USER@$SSH_HOST"
+
+          # Create the application directory automatically; keep persistent data.
+          stage='check SSH access and server prerequisites'
+          echo 'Connecting to deployment server and checking prerequisites.'
+          ssh "${ssh_options[@]}" "$remote" "bash -s -- '$DEPLOY_PATH'" <<'REMOTE'
+          set -Eeuo pipefail
+          trap 'status=$?; echo "::error::Server prerequisite check failed at line $LINENO (exit $status)"; exit "$status"' ERR
+          install_system_packages() {
+            if [[ "$EUID" -ne 0 ]]; then
+              echo '::error::Installing missing server packages requires the SSH root user.'
+              exit 1
+            fi
+            if ! command -v apt-get >/dev/null; then
+              echo '::error::Automatic system package installation supports Ubuntu/Debian (apt-get).'
+              exit 1
+            fi
+            if [[ "${apt_updated:-false}" != true ]]; then
+              apt-get update
+              apt_updated=true
+            fi
+            DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends "$@"
+          }
+
+          if ! command -v rsync >/dev/null; then
+            echo 'Installing rsync on deployment server.'
+            install_system_packages rsync
+          fi
+
+          ensure_node_download_tools() {
+            local packages=()
+            command -v curl >/dev/null || packages+=(curl)
+            command -v tar >/dev/null || packages+=(tar)
+            command -v xz >/dev/null || packages+=(xz-utils)
+            [[ -s /etc/ssl/certs/ca-certificates.crt ]] || packages+=(ca-certificates)
+            if (( ${#packages[@]} > 0 )); then
+              install_system_packages "${packages[@]}"
+            fi
+          }
+
+          # Load existing nvm, or install it if Node.js 24/npm are unavailable.
+          export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
+          if [[ -s "$NVM_DIR/nvm.sh" ]]; then
+            . "$NVM_DIR/nvm.sh" --no-use
+            if ! nvm use 24 >/dev/null 2>&1; then
+              echo 'Installing Node.js 24 through existing nvm.'
+              ensure_node_download_tools
+              nvm install 24
+            fi
+          elif ! command -v node >/dev/null || ! command -v npm >/dev/null ||
+            ! node -e 'process.exit(Number(process.versions.node.split(".")[0]) === 24 ? 0 : 1)'; then
+            echo 'Installing nvm and Node.js 24 on deployment server.'
+            ensure_node_download_tools
+            curl -fsSL --retry 3 https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.8/install.sh |
+              PROFILE=/dev/null METHOD=script bash
+            . "$NVM_DIR/nvm.sh" --no-use
+            nvm install 24
+          fi
+
+          if ! command -v pm2 >/dev/null; then
+            echo 'Installing PM2 for the selected Node.js version.'
+            npm install --global pm2
+          fi
+          mkdir -p -- "$1"
+          cd "$1"
+          for command in node npm pm2 rsync; do
+            if ! command -v "$command" >/dev/null; then
+              echo "::error::Missing command on deployment server or not in non-interactive SSH PATH: $command"
+              exit 1
+            fi
+            echo "Server prerequisite available: $command"
+          done
+          node -e 'if (Number(process.versions.node.split(".")[0]) !== 24) { console.error("Node.js 24 is required on the server."); process.exit(1); }'
+          REMOTE
+
+          # Package only the files needed by the production process.
+          stage='package application runtime'
+          echo 'Packaging application runtime.'
+          package_dir="$deploy_temp/package"
+          mkdir -p "$package_dir"
+          cp package.json ecosystem.config.cjs server.js package-lock.json "$package_dir/"
+          cp -R build "$package_dir/"
+
+          # Quote SSH arguments for rsync, including temporary paths with spaces.
+          printf -v RSYNC_RSH '%q ' ssh "${ssh_options[@]}"
+          export RSYNC_RSH
+          # Delete stale build assets only; preserve persistent .data.
+          stage='transfer build assets'
+          echo 'Transferring build assets.'
+          rsync -az --delete "$package_dir/build/" "$remote:$DEPLOY_PATH/build/"
+          stage='transfer runtime files'
+          echo 'Transferring runtime files.'
+          rsync -az --exclude='/build/' "$package_dir/" "$remote:$DEPLOY_PATH/"
+          # rsync replaces the env file using a temporary file and rename.
+          stage='transfer production environment file'
+          echo 'Transferring environment file with permission 600.'
+          rsync -az --chmod=F600 "$deploy_temp/.env" "$remote:$DEPLOY_PATH/.env"
+
+          stage='install server dependencies, restart PM2 and check health'
+          echo 'Installing server dependencies and restarting the application.'
+          ssh "${ssh_options[@]}" "$remote" "bash -s -- '$DEPLOY_PATH' '$PM2_APP_NAME'" <<'REMOTE'
+          set -Eeuo pipefail
+          stage='enter deployment directory'
+          trap 'status=$?; echo "::error::Server deploy failed during: $stage (line $LINENO, exit $status)"; exit "$status"' ERR
+          stage='load Node.js 24 from nvm'
+          export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
+          if [[ -s "$NVM_DIR/nvm.sh" ]]; then
+            . "$NVM_DIR/nvm.sh" --no-use
+            nvm use 24 >/dev/null
+          fi
+          cd "$1"
+          app_name="$2"
+          # Skip the prepare script, which requires development-only Svelte tools.
+          stage='install production dependencies'
+          npm ci --omit=dev --ignore-scripts
+          export NODE_ENV=production
+          stage='start or restart PM2'
+          export DEPLOY_PM2_APP_NAME="$app_name"
+          pm2 startOrRestart ecosystem.config.cjs --update-env
+          # Fail the workflow if the application does not serve HTTP after startup.
+          stage='application HTTP health check'
+          node --env-file=.env --input-type=module <<'HEALTH'
+          import { setTimeout } from 'node:timers/promises';
+          const url = `http://127.0.0.1:${process.env.PORT || 3000}/login`;
+          for (let attempt = 0; attempt < 15; attempt++) {
+            try {
+              const response = await fetch(url, { signal: AbortSignal.timeout(3000) });
+              if (response.ok) process.exit(0);
+            } catch {}
+            await setTimeout(2000);
+          }
+          console.error('Application health check failed. Inspect pm2 logs on the server.');
+          process.exit(1);
+          HEALTH
+          stage='save PM2 process list'
+          pm2 save
+          REMOTE
+
+      - name: Clean build files after successful deploy
+        if: success()
+        run: |
+          set -euo pipefail
+          cd "$GITHUB_WORKSPACE"
+          # Only remove generated files from this job's runner checkout.
+          # Production files and the shared Node.js tool cache stay in place.
+          rm -rf -- node_modules .svelte-kit build dist
+          echo 'Removed runner dependencies and build output.'

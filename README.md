@@ -67,3 +67,8 @@ test:web ใช้ PocketBase จำลองและ production build ตร�
 Android รับหนึ่งครั้งต่อประกาศและ revision ต่ออุปกรณ์ มีหลายประกาศได้และเก็บแยกในหน้าแจ้งเตือน แตะรายการเพื่ออ่านข้อความเต็มและเปิดลิงก์ แก้ไขแล้วเผยแพร่เป็น revision ใหม่จึงแจ้งอีกครั้ง รอบส่งตรวจทุกนาที รวมประกาศที่ตั้งเวลาเริ่มและอุปกรณ์ที่เพิ่งลงทะเบียน การปิดประกาศยกเลิกคิวที่ยังไม่ส่ง แต่ไม่เรียกคืน notification ที่ส่งไปแล้ว
 
 Backend ใช้โปรเจกต์ `../cskmitl-android-backend` และ migration `1790450000_add_announcement_push.js` เพื่อเพิ่ม target Android และคิวรายอุปกรณ์ ต้องติดตั้ง backend นี้ก่อนเลือก Android ในระบบจริง
+
+
+## GitHub Actions deploy
+
+วิธีตั้งค่า SSH, ENV_FILE, PM2 และ deploy อัตโนมัติ: [คู่มือ deploy](docs/DEPLOY.md)
