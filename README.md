@@ -52,7 +52,7 @@ npm run build
 npm run test:web
 $env:POCKETBASE_URL = 'https://your-pocketbase.example'
 $env:ORIGIN = 'https://announcements.example'
-$env:PORT = '5175'
+$env:PORT = '3000'
 npm start
 ```
 
