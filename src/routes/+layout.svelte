@@ -17,5 +17,9 @@
   <main class="mx-auto w-full max-w-7xl flex-1 px-4 py-8 sm:px-8 sm:py-10">{@render children()}</main>
   <footer class="border-t border-border px-4 py-6 text-center text-xs text-muted-foreground">
     <span>© {new Date().getFullYear()} <a href="https://github.com/techasit5415" target="_blank" rel="noopener noreferrer" class="hover:text-foreground hover:underline">Techasit Vanitpattarakul</a></span>
+    <nav aria-label="นโยบายและข้อกำหนด" class="mt-3 flex flex-wrap items-center justify-center gap-x-5 gap-y-1">
+      <a href="/privacy" class="inline-flex min-h-11 items-center underline underline-offset-4 hover:text-foreground">นโยบายความเป็นส่วนตัว</a>
+      <a href="/terms" class="inline-flex min-h-11 items-center underline underline-offset-4 hover:text-foreground">ข้อกำหนดการใช้งาน</a>
+    </nav>
   </footer>
 </div>
