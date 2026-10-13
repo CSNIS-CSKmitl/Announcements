@@ -23,5 +23,5 @@
       <a href="/terms" class="inline-flex min-h-7 items-center underline underline-offset-4 hover:text-foreground">ข้อกำหนดการใช้งาน</a>
     </nav>
   </footer>
-  <LegalConsent />
+  <LegalConsent userId={data.user?.id ?? null} />
 </div>
