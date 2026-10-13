@@ -6,6 +6,16 @@ let admin: PocketBase | null = null;
 let authenticatedAt = 0;
 const AUTH_TTL_MS = 5 * 60 * 1000;
 
+function sourceIp(event: RequestEvent): string {
+  if (env.TRUST_PROXY === 'true') {
+    const realIp = event.request.headers.get('x-real-ip')?.trim();
+    if (realIp) return realIp;
+    const forwardedIp = event.request.headers.get('x-forwarded-for')?.split(',')[0]?.trim();
+    if (forwardedIp) return forwardedIp;
+  }
+  return event.getClientAddress();
+}
+
 async function getAdmin(): Promise<PocketBase | null> {
   const url = env.POCKETBASE_URL || 'http://127.0.0.1:8090';
   if (!env.PB_ADMIN_EMAIL || !env.PB_ADMIN_PASSWORD) return null;
@@ -30,7 +40,7 @@ export async function writeServiceAudit(event: RequestEvent, input: { userId?: s
   try {
     await pb.collection('service_access_logs').create({
       service: 'announcements', user: input.userId || undefined,
-      source_ip: event.getClientAddress(), method: event.request.method,
+      source_ip: sourceIp(event), method: event.request.method,
       path: event.url.pathname, action: input.action, status_code: input.statusCode,
       user_agent: event.request.headers.get('user-agent') || undefined,
       request_id: event.request.headers.get('x-request-id') || undefined,
