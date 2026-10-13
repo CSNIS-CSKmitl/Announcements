@@ -2,7 +2,7 @@
   let { userId = null }: { userId?: string | null } = $props();
   let open = $state(false); let confirmed = $state(false); const serviceKey = 'announcements:legal-consent:v1';
   let storageKey = $derived(`${serviceKey}:${userId ?? 'anonymous'}`);
-  $effect(() => { if (typeof localStorage !== 'undefined') { open = localStorage.getItem(storageKey) !== 'accepted'; confirmed = false; } });
+  $effect(() => { if (typeof localStorage !== 'undefined') { open = Boolean(userId) && localStorage.getItem(storageKey) !== 'accepted'; confirmed = false; } });
   function accept() { if (!confirmed) return; localStorage.setItem(storageKey, 'accepted'); open = false; }
 </script>
 {#if open}<div class="backdrop"><dialog open class="dialog" aria-labelledby="consent-title"><p class="kicker">ก่อนเริ่มใช้งาน</p><h2 id="consent-title">กรุณาอ่านและยอมรับเอกสารของบริการ</h2><p class="copy">กรุณาอ่านนโยบายความเป็นส่วนตัวและข้อกำหนดการใช้งานก่อนดำเนินการต่อ</p><div class="links"><a href="/privacy" target="_blank" rel="noopener noreferrer">นโยบายความเป็นส่วนตัว ↗</a><a href="/terms" target="_blank" rel="noopener noreferrer">ข้อกำหนดการใช้งาน ↗</a></div><label class="check"><input type="checkbox" bind:checked={confirmed} /> ฉันได้อ่านและยอมรับเอกสารทั้งสองฉบับ</label><button disabled={!confirmed} onclick={accept}>ยอมรับและเริ่มใช้งาน</button></dialog></div>{/if}
