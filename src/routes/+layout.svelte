@@ -4,6 +4,7 @@
   import { Button } from '$lib/components/ui/button';
   import type { LayoutData } from './$types';
   import type { Snippet } from 'svelte';
+  import LegalConsent from '$lib/components/LegalConsent.svelte';
   let { data, children }: { data: LayoutData; children: Snippet } = $props();
 </script>
 <svelte:head><title>Announcements — ศูนย์ประกาศกลาง</title><meta name="robots" content="noindex" /><link rel="icon" href="/favicon.svg" /></svelte:head>
@@ -22,4 +23,5 @@
       <a href="/terms" class="inline-flex min-h-7 items-center underline underline-offset-4 hover:text-foreground">ข้อกำหนดการใช้งาน</a>
     </nav>
   </footer>
+  <LegalConsent />
 </div>
