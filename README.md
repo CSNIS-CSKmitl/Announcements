@@ -71,7 +71,7 @@ Backend ใช้โปรเจกต์ `../cskmitl-android-backend` และ
 
 ## GitHub Actions deploy
 
-วิธีตั้งค่า SSH, ENV_FILE, PM2 และ deploy อัตโนมัติ: [คู่มือ deploy](docs/DEPLOY.md)
+วิธีตั้งค่า SSH, ENV_FILE, PM2 และ deploy อัตโนมัติ: [คู่มือ deploy](https://github.com/CSNIS-CSKmitl/Docs/blob/main/Projects/announcements/docs/DEPLOY.md)
 
 ## เอกสารกฎหมาย
 
