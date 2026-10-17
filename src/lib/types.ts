@@ -5,6 +5,15 @@ export interface Announcement {
   start_at: string; end_at: string; link_label: string; link_url: string; source_url: string;
   revision: string; created: string; updated: string;
 }
+export interface AnnouncementRead {
+  id: string;
+  announcement: string;
+  revision: string;
+  site: string;
+  user?: string;
+  viewer_hash: string;
+  created: string;
+}
 export const sites = [{ id: 'initd', name: 'init.d' }, { id: 'printer', name: 'Printer-server' }, { id: 'android', name: 'Android app' }] as const;
 export const priorityLabels = { info: 'ทั่วไป', important: 'สำคัญ', emergency: 'ฉุกเฉิน' } as const;
 export function displayState(item: Announcement, now = Date.now()) {

@@ -15,10 +15,15 @@
     Pencil,
     Archive,
     Globe,
-    ExternalLink,
+    Megaphone,
   } from "@lucide/svelte";
   import AnnouncementEditor from "$lib/components/AnnouncementEditor.svelte";
   import AnnouncementStats from "$lib/components/AnnouncementStats.svelte";
+  import {
+    filterAnnouncements,
+    type DrilldownFilter,
+    type TimeRange,
+  } from "$lib/stats.mjs";
   import {
     displayState,
     targetLabel,
@@ -26,9 +31,12 @@
     type Announcement,
   } from "$lib/types";
   import type { PageData, ActionData } from "./$types";
+
   let { data, form }: { data: PageData; form: ActionData } = $props();
   let search = $state(""),
-    filter = $state("all"),
+    filter = $state<DrilldownFilter>("all"),
+    range = $state<TimeRange>("all"),
+    realtime = $state(false),
     editorOpen = $state(false),
     editing = $state<Announcement | null>(null);
   let editorValues = $state<Record<string, unknown> | null>(null),
@@ -36,28 +44,40 @@
     editorMessage = $state("");
   let now = $state(Date.now()),
     refreshing = $state(false);
-  const states = [
-    "กำลังแสดง",
-    "รอกำหนดเวลา",
-    "ฉบับร่าง",
-    "หมดอายุ",
-    "ปิดประกาศ",
+
+  const filterOptions: Array<{ value: DrilldownFilter; label: string }> = [
+    { value: "all", label: "ทุกสถานะ" },
+    { value: "active", label: "กำลังแสดง" },
+    { value: "scheduled", label: "รอกำหนดเวลา" },
+    { value: "draft", label: "ฉบับร่าง" },
+    { value: "expired", label: "หมดอายุ" },
+    { value: "inactive", label: "ปิดประกาศ" },
+    { value: "urgent", label: "ประกาศฉุกเฉิน" },
   ];
+
+  const filterLabelMap = Object.fromEntries(
+    filterOptions.map((opt) => [opt.value, opt.label]),
+  ) as Record<DrilldownFilter, string>;
+
   let visible = $derived(
-    data.items.filter(
-      (item) =>
-        (filter === "all" || displayState(item, now) === filter) &&
-        (item.title + " " + item.body)
-          .toLowerCase()
-          .includes(search.toLowerCase()),
-    ),
+    filterAnnouncements(data.items, {
+      range,
+      drilldown: filter,
+      search,
+      now,
+    }) as Announcement[],
   );
+
   onMount(() => {
     const timer = setInterval(() => {
       now = Date.now();
-    }, 30000);
+      if (realtime && !refreshing && document.visibilityState === "visible") {
+        void refresh();
+      }
+    }, 15000);
     return () => clearInterval(timer);
   });
+
   $effect(() => {
     if (form?.ok) editorOpen = false;
     else if (form && "values" in form && form.values) {
@@ -67,6 +87,7 @@
       editorOpen = true;
     }
   });
+
   function edit(item: Announcement | null) {
     editing = item;
     editorValues = null;
@@ -74,6 +95,7 @@
     editorMessage = "";
     editorOpen = true;
   }
+
   async function refresh() {
     refreshing = true;
     try {
@@ -83,6 +105,7 @@
       refreshing = false;
     }
   }
+
   function formatDate(value: string) {
     return value
       ? new Intl.DateTimeFormat("th-TH", {
@@ -127,7 +150,20 @@
         >{form.ok ? "ดำเนินการสำเร็จ" : "ดำเนินการไม่สำเร็จ"}</Alert.Title
       ><Alert.Description>{form.message}</Alert.Description></Alert.Root
     >{/if}
-  <AnnouncementStats items={data.items} {now} />
+  <AnnouncementStats
+    items={data.items}
+    reads={data.reads}
+    readsConfigured={data.readsConfigured}
+    {now}
+    bind:range
+    bind:drilldown={filter}
+    bind:realtime
+    loading={refreshing}
+    error={data.loadError}
+    setupRequired={data.setupRequired}
+    lastUpdated={data.loadedAt}
+    onRefresh={refresh}
+  />
   <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_280px]">
     <section class="flex min-w-0 flex-col gap-4" aria-label="รายการประกาศ">
       <div class="flex flex-col gap-3 sm:flex-row">
@@ -140,12 +176,11 @@
           ><Select.Trigger
             class="min-h-11 w-full sm:w-48"
             aria-label="กรองสถานะ"
-            >{filter === "all" ? "ทุกสถานะ" : filter}</Select.Trigger
+            >{filterLabelMap[filter] || "ทุกสถานะ"}</Select.Trigger
           ><Select.Content
             ><Select.Group
-              ><Select.Item value="all">ทุกสถานะ</Select.Item
-              >{#each states as state}<Select.Item value={state}
-                  >{state}</Select.Item
+              >{#each filterOptions as opt (opt.value)}<Select.Item
+                  value={opt.value}>{opt.label}</Select.Item
                 >{/each}</Select.Group
             ></Select.Content
           ></Select.Root
@@ -157,9 +192,24 @@
           class="min-h-11"><RefreshCw data-icon="inline-start" />รีเฟรช</Button
         >
       </div>
-      <p class="text-xs text-muted-foreground">
-        {visible.length} รายการ · เวลาประเทศไทย
-      </p>
+      <div class="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
+        <p>
+          {visible.length} รายการ · เวลาประเทศไทย
+        </p>
+        {#if filter !== "all" || range !== "all" || search}
+          <button
+            type="button"
+            onclick={() => {
+              filter = "all";
+              range = "all";
+              search = "";
+            }}
+            class="text-primary underline-offset-4 hover:underline"
+          >
+            ล้างตัวกรองทั้งหมด
+          </button>
+        {/if}
+      </div>
       {#each visible as item (item.id)}
         {@const state = displayState(item, now)}
         <Card.Root
@@ -222,12 +272,12 @@
       {:else}<Empty.Root class="border border-dashed border-border bg-card"
           ><Empty.Header
             ><Empty.Media variant="icon"><Megaphone /></Empty.Media><Empty.Title
-              >{search || filter !== "all"
+              >{search || filter !== "all" || range !== "all"
                 ? "ไม่พบประกาศที่ตรงกัน"
                 : "เริ่มประกาศแรกของคุณ"}</Empty.Title
             ><Empty.Description
-              >{search || filter !== "all"
-                ? "ลองเปลี่ยนคำค้นหาหรือตัวกรอง"
+              >{search || filter !== "all" || range !== "all"
+                ? "ลองเปลี่ยนคำค้นหา ช่วงเวลา หรือตัวกรองสถานะ"
                 : "เขียนครั้งเดียว แล้วเผยแพร่ไปยังเว็บที่ต้องการ"}</Empty.Description
             ></Empty.Header
           ><Empty.Content
@@ -241,7 +291,6 @@
         >{/each}
     </section>
     <aside class="flex flex-col gap-4">
-
       <Card.Root
         ><Card.Header
           ><Card.Title>ก่อนเผยแพร่</Card.Title><Card.Description
@@ -256,9 +305,7 @@
             <li>ตั้งเวลาเริ่มและหมดอายุถ้ามี</li>
             <li>ดูตัวอย่าง แล้วกดเผยแพร่</li>
           </ol></Card.Content
-        ><Card.Footer
-          ></Card.Footer
-        ></Card.Root
+        ><Card.Footer></Card.Footer></Card.Root
       >
     </aside>
   </div>

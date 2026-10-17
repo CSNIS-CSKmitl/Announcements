@@ -6,24 +6,32 @@ let admin: PocketBase | null = null;
 let authenticatedAt = 0;
 const AUTH_TTL_MS = 5 * 60 * 1000;
 
-function sourceIp(event: RequestEvent): string {
+export function sourceIp(event: RequestEvent): string {
   if (env.TRUST_PROXY === 'true') {
     const realIp = event.request.headers.get('x-real-ip')?.trim();
     if (realIp) return realIp;
     const forwardedIp = event.request.headers.get('x-forwarded-for')?.split(',')[0]?.trim();
     if (forwardedIp) return forwardedIp;
   }
-  return event.getClientAddress();
+  try {
+    return event.getClientAddress();
+  } catch {
+    return '127.0.0.1';
+  }
 }
 
-async function getAdmin(): Promise<PocketBase | null> {
+export async function getAdmin(): Promise<PocketBase | null> {
   const url = env.POCKETBASE_URL || 'http://127.0.0.1:8090';
   if (!env.PB_ADMIN_EMAIL || !env.PB_ADMIN_PASSWORD) return null;
   if (admin?.authStore.isValid && Date.now() - authenticatedAt < AUTH_TTL_MS) return admin;
   const client = new PocketBase(url);
   client.autoCancellation(false);
   try {
-    await client.admins.authWithPassword(env.PB_ADMIN_EMAIL, env.PB_ADMIN_PASSWORD);
+    try {
+      await client.collection('_superusers').authWithPassword(env.PB_ADMIN_EMAIL, env.PB_ADMIN_PASSWORD);
+    } catch {
+      await client.admins.authWithPassword(env.PB_ADMIN_EMAIL, env.PB_ADMIN_PASSWORD);
+    }
     admin = client;
     authenticatedAt = Date.now();
     return client;

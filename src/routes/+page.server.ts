@@ -1,7 +1,8 @@
 import { error, fail, redirect } from '@sveltejs/kit';
 import { randomUUID } from 'node:crypto';
 import { validateAnnouncement } from '$lib/validation.mjs';
-import type { Announcement } from '$lib/types';
+import { getAdmin } from '$lib/server/audit-log';
+import type { Announcement, AnnouncementRead } from '$lib/types';
 import type { Actions, PageServerLoad } from './$types';
 function requireAdmin(user: App.Locals['user']) {
   if (!user) redirect(303, '/login');
@@ -9,11 +10,38 @@ function requireAdmin(user: App.Locals['user']) {
 }
 export const load: PageServerLoad = async ({ locals }) => {
   requireAdmin(locals.user);
-  try { return { items: await locals.pb.collection('announcements').getFullList<Announcement>({ sort: '-updated' }), setupRequired: false, loadError: '' }; }
-  catch (cause) {
+  const loadedAt = new Date().toISOString();
+  let items: Announcement[] = [];
+  try {
+    items = await locals.pb.collection('announcements').getFullList<Announcement>({ sort: '-updated' });
+  } catch (cause) {
     const status = (cause as { status?: number }).status;
-    return { items: [] as Announcement[], setupRequired: status === 404, loadError: status === 404 ? '' : 'โหลดประกาศไม่ได้ กรุณาตรวจสอบการเชื่อมต่อและสิทธิ์ของ collection announcements' };
+    return {
+      items: [] as Announcement[],
+      reads: [] as AnnouncementRead[],
+      readsConfigured: false,
+      loadedAt,
+      setupRequired: status === 404,
+      loadError: status === 404 ? '' : 'โหลดประกาศไม่ได้ กรุณาตรวจสอบการเชื่อมต่อและสิทธิ์ของ collection announcements'
+    };
   }
+
+  let reads: AnnouncementRead[] = [];
+  let readsConfigured = false;
+  try {
+    const readClient = (await getAdmin()) ?? locals.pb;
+    reads = await readClient.collection('announcement_reads').getFullList<AnnouncementRead>({
+      sort: '-created',
+      fields: 'id,announcement,revision,site,user,viewer_hash,created'
+    });
+    readsConfigured = true;
+  } catch {
+    // Gracefully handle missing announcement_reads collection or restricted access
+    reads = [];
+    readsConfigured = false;
+  }
+
+  return { items, reads, readsConfigured, loadedAt, setupRequired: false, loadError: '' };
 };
 export const actions: Actions = {
   save: async ({ request, locals }) => {
