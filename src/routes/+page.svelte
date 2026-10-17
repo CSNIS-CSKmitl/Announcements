@@ -11,17 +11,14 @@
   import { Badge } from "$lib/components/ui/badge";
   import {
     Plus,
-    Megaphone,
     RefreshCw,
     Pencil,
     Archive,
     Globe,
-    CalendarClock,
-    Radio,
-    FileText,
     ExternalLink,
   } from "@lucide/svelte";
   import AnnouncementEditor from "$lib/components/AnnouncementEditor.svelte";
+  import AnnouncementStats from "$lib/components/AnnouncementStats.svelte";
   import {
     displayState,
     targetLabel,
@@ -55,28 +52,6 @@
           .includes(search.toLowerCase()),
     ),
   );
-  let stats = $derived([
-    { label: "ประกาศทั้งหมด", count: data.items.length, icon: Megaphone },
-    {
-      label: "กำลังแสดง",
-      count: data.items.filter(
-        (item) => displayState(item, now) === "กำลังแสดง",
-      ).length,
-      icon: Radio,
-    },
-    {
-      label: "รอกำหนดเวลา",
-      count: data.items.filter(
-        (item) => displayState(item, now) === "รอกำหนดเวลา",
-      ).length,
-      icon: CalendarClock,
-    },
-    {
-      label: "ฉบับร่าง",
-      count: data.items.filter((item) => item.status === "draft").length,
-      icon: FileText,
-    },
-  ]);
   onMount(() => {
     const timer = setInterval(() => {
       now = Date.now();
@@ -152,24 +127,7 @@
         >{form.ok ? "ดำเนินการสำเร็จ" : "ดำเนินการไม่สำเร็จ"}</Alert.Title
       ><Alert.Description>{form.message}</Alert.Description></Alert.Root
     >{/if}
-  <div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
-    {#each stats as stat}<Card.Root
-        ><Card.Header class="flex-row items-start justify-between"
-          ><Card.Title>{stat.label}</Card.Title><stat.icon
-            aria-hidden="true"
-            class="size-5 text-muted-foreground"
-          /><Card.Description class="sr-only"
-            >จำนวน{stat.label}</Card.Description
-          ></Card.Header
-        ><Card.Content
-          ><p class="text-3xl font-semibold tabular-nums">
-            {stat.count}
-          </p></Card.Content
-        ><Card.Footer class="sr-only"
-          >{stat.label} {stat.count} รายการ</Card.Footer
-        ></Card.Root
-      >{/each}
-  </div>
+  <AnnouncementStats items={data.items} {now} />
   <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_280px]">
     <section class="flex min-w-0 flex-col gap-4" aria-label="รายการประกาศ">
       <div class="flex flex-col gap-3 sm:flex-row">
