@@ -1,23 +1,20 @@
 import PocketBase from 'pocketbase';
 import { env } from '$env/dynamic/private';
 import type { RequestEvent } from '@sveltejs/kit';
+import { resolveClientIp } from './client-ip.mjs';
 
 let admin: PocketBase | null = null;
 let authenticatedAt = 0;
 const AUTH_TTL_MS = 5 * 60 * 1000;
 
 export function sourceIp(event: RequestEvent): string {
-  if (env.TRUST_PROXY === 'true') {
-    const realIp = event.request.headers.get('x-real-ip')?.trim();
-    if (realIp) return realIp;
-    const forwardedIp = event.request.headers.get('x-forwarded-for')?.split(',')[0]?.trim();
-    if (forwardedIp) return forwardedIp;
-  }
-  try {
-    return event.getClientAddress();
-  } catch {
-    return '127.0.0.1';
-  }
+  let remoteAddress = '';
+  try { remoteAddress = event.getClientAddress(); } catch { /* unavailable in some adapters */ }
+  return resolveClientIp({
+    headers: Object.fromEntries(event.request.headers.entries()),
+    remoteAddress,
+    trustProxy: env.TRUST_PROXY === 'true'
+  });
 }
 
 export async function getAdmin(): Promise<PocketBase | null> {
@@ -46,13 +43,14 @@ export async function writeServiceAudit(event: RequestEvent, input: { userId?: s
   const pb = await getAdmin();
   if (!pb) return;
   try {
+    const clientIp = sourceIp(event);
     await pb.collection('service_access_logs').create({
       service: 'announcements', user: input.userId || undefined,
-      source_ip: sourceIp(event), method: event.request.method,
+      source_ip: clientIp, method: event.request.method,
       path: event.url.pathname, action: input.action, status_code: input.statusCode,
       user_agent: event.request.headers.get('user-agent') || undefined,
       request_id: event.request.headers.get('x-request-id') || undefined,
-      metadata: input.metadata || {}
+      metadata: { ...(input.metadata || {}), ip_version: clientIp ? (clientIp.includes(':') ? 6 : 4) : null }
     });
   } catch (error) {
     console.warn('[audit] Unable to store announcements access log:', error instanceof Error ? error.message : error);
