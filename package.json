@@ -1,7 +1,7 @@
 {
   "name": "cskmitl-announcements", "version": "1.0.0", "private": true, "type": "module",
   "scripts": {
-    "dev": "vite dev --host 127.0.0.1 --port 5175",
+    "dev": "vite dev ",
     "build": "vite build", "start": "node build", "preview": "vite preview",
     "prepare": "svelte-kit sync", "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "test": "node --test tests/validation.test.mjs tests/stats.test.mjs", "test:web": "node --test tests/web.test.mjs", "setup:db": "node --env-file-if-exists=.env scripts/setup-db.mjs", "setup:stats-db": "node --env-file-if-exists=.env scripts/setup-stats-db.mjs --apply"

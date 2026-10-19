@@ -27,6 +27,9 @@
 export const KNOWN_SITES = [
   { id: 'initd', name: 'init.d' },
   { id: 'printer', name: 'Printer-server' },
+  { id: 'booking', name: 'Booking' },
+  { id: 'borrowly', name: 'Borrowly' },
+  { id: 'csnis', name: 'CSNIS Portal' },
   { id: 'android', name: 'Android app' }
 ];
 
@@ -297,7 +300,7 @@ export function calculateAnnouncementStats(items, reads = [], options = {}) {
   /** @type {Set<string>} */
   const coveredSites = new Set();
   /** @type {Record<string, number>} */
-  const bySite = { initd: 0, printer: 0, android: 0 };
+  const bySite = Object.fromEntries(KNOWN_SITES.map((site) => [site.id, 0]));
 
   for (const item of filteredItems) {
     const state = getAnnouncementState(item, now);

@@ -24,7 +24,7 @@ const schema = {
     { type: 'text', name: 'body', required: true, max: 6000 },
     { type: 'select', name: 'priority', required: true, maxSelect: 1, values: ['info', 'important', 'emergency'] },
     { type: 'select', name: 'status', required: true, maxSelect: 1, values: ['draft', 'published', 'archived'] },
-    { type: 'select', name: 'targets', required: true, maxSelect: 4, values: ['all', 'initd', 'printer', 'android'] },
+    { type: 'select', name: 'targets', required: true, maxSelect: 7, values: ['all', 'initd', 'printer', 'booking', 'borrowly', 'csnis', 'android'] },
     { type: 'date', name: 'start_at' }, { type: 'date', name: 'end_at' },
     { type: 'text', name: 'link_label', max: 80 }, { type: 'url', name: 'link_url' }, { type: 'url', name: 'source_url' },
     { type: 'text', name: 'revision', required: true, max: 100 },
@@ -39,8 +39,24 @@ let existing;
 try { existing = await pb.collections.getOne('announcements'); } catch (cause) { if (cause.status !== 404) throw cause; }
 if (existing) {
   for (const field of schema.fields) if (!existing.fields.some(item => item.name === field.name && item.type === field.type)) throw new Error(`Existing announcements.${field.name} differs. No changes made.`);
-  for (const key of ['listRule', 'viewRule', 'createRule', 'updateRule', 'deleteRule']) if (existing[key] !== schema[key]) throw new Error(`Existing announcements.${key} differs. Review it manually; no changes made.`);
-  console.log('Announcements collection is already configured for admin and superadmin.');
+  const differingRules = ['listRule', 'viewRule', 'createRule', 'updateRule', 'deleteRule'].filter((key) => existing[key] !== schema[key]);
+  if (differingRules.length) console.warn(`Preserving existing collection rules that differ from the template: ${differingRules.join(', ')}.`);
+  const currentTargets = existing.fields.find((field) => field.name === 'targets');
+  const desiredTargets = schema.fields.find((field) => field.name === 'targets');
+  const targetOptionsDiffer = JSON.stringify(currentTargets?.values ?? []) !== JSON.stringify(desiredTargets.values) || currentTargets?.maxSelect !== desiredTargets.maxSelect;
+  if (targetOptionsDiffer) {
+    console.log(`Update announcements.targets to: ${desiredTargets.values.join(', ')}.`);
+    if (!apply) { console.log('Dry run only. Add --apply to update the collection.'); process.exit(0); }
+    await pb.collections.update(existing.id, {
+      fields: existing.fields.map((field) => field.name === 'targets' ? { ...field, values: desiredTargets.values, maxSelect: desiredTargets.maxSelect } : field)
+    });
+    const verified = await pb.collections.getOne('announcements');
+    const verifiedTargets = verified.fields.find((field) => field.name === 'targets');
+    if (JSON.stringify(verifiedTargets?.values ?? []) !== JSON.stringify(desiredTargets.values)) throw new Error('announcements.targets verification failed.');
+    console.log('Updated and verified announcements.targets.');
+  } else {
+    console.log('Announcements collection is already configured for every application.');
+  }
 } else {
   console.log(`Create announcements collection; ${adminRoleIds.length} admin/superadmin user types; public visitors read active published notices only.`);
   if (!apply) { console.log('Dry run only. Add --apply to create the collection.'); process.exit(0); }

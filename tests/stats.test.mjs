@@ -170,11 +170,14 @@ test('calculates status counts, audience coverage, urgent count, and read rates 
   assert.equal(stats.urgentAndImportant, 3);
   assert.equal(stats.publishedCount, 3);
 
-  // Target site coverage: 'all' covers all 3 known sites
-  assert.equal(stats.targetSitesCount, 3);
+  // Target site coverage: 'all' covers all 6 known applications
+  assert.equal(stats.targetSitesCount, 6);
   assert.equal(stats.bySite.initd, 3); // 'all' + 'initd,printer' + 'initd'
   assert.equal(stats.bySite.printer, 3); // 'all' + 'initd,printer' + 'printer'
   assert.equal(stats.bySite.android, 2); // 'all' + 'android'
+  assert.equal(stats.bySite.booking, 1); // 'all'
+  assert.equal(stats.bySite.borrowly, 1); // 'all'
+  assert.equal(stats.bySite.csnis, 1); // 'all'
 
   // Read statistics: 3 total reads across 2 distinct announcements out of 3 published
   assert.equal(stats.totalReads, 3);

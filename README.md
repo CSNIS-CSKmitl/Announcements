@@ -1,6 +1,6 @@
 # Announcements — ศูนย์ประกาศกลาง
 
-โปรเจกต์แยกสำหรับ admin และ superadmin ใน PocketBase เดิม เขียนประกาศครั้งเดียวแล้วเลือกทุกเว็บและ Android หรือเฉพาะ init.d / Printer-server / Android ผู้เข้าชมไม่ต้องล็อกอิน เห็นป๊อปอัปทุกครั้งที่เปิดหรือรีโหลดเว็บ
+โปรเจกต์แยกสำหรับ admin และ superadmin ใน PocketBase เดิม เขียนประกาศครั้งเดียวแล้วเลือกทุกเว็บและ Android หรือเลือกเฉพาะ init.d / Printer-server / Booking / Borrowly / CSNIS Portal / Android ผู้เข้าชมไม่ต้องล็อกอิน เห็นป๊อปอัปทุกครั้งที่เปิดหรือรีโหลดเว็บ
 
 ## เริ่มใช้งาน
 

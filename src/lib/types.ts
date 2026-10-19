@@ -14,7 +14,14 @@ export interface AnnouncementRead {
   viewer_hash: string;
   created: string;
 }
-export const sites = [{ id: 'initd', name: 'init.d' }, { id: 'printer', name: 'Printer-server' }, { id: 'android', name: 'Android app' }] as const;
+export const sites = [
+  { id: 'initd', name: 'init.d' },
+  { id: 'printer', name: 'Printer-server' },
+  { id: 'booking', name: 'Booking' },
+  { id: 'borrowly', name: 'Borrowly' },
+  { id: 'csnis', name: 'CSNIS Portal' },
+  { id: 'android', name: 'Android app' }
+] as const;
 export const priorityLabels = { info: 'ทั่วไป', important: 'สำคัญ', emergency: 'ฉุกเฉิน' } as const;
 export function displayState(item: Announcement, now = Date.now()) {
   if (item.status === 'draft') return 'ฉบับร่าง';

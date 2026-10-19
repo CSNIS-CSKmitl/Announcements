@@ -75,7 +75,7 @@
         >{/if}
     </Card.Content><Card.Footer
       ><p class="text-xs leading-relaxed text-muted-foreground">
-        เผยแพร่ประกาศถึง init.d และ Printer-server จากที่เดียว
+        เผยแพร่ประกาศถึงทุกแอปของ CSNIS จากที่เดียว
       </p></Card.Footer
     ></Card.Root
   >
