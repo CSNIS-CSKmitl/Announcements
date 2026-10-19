@@ -18,16 +18,18 @@ export function sourceIp(event: RequestEvent): string {
 }
 
 export async function getAdmin(): Promise<PocketBase | null> {
-  const url = env.POCKETBASE_URL || 'http://127.0.0.1:8090';
-  if (!env.PB_ADMIN_EMAIL || !env.PB_ADMIN_PASSWORD) return null;
+  const url = env.POCKETBASE_URL || 'http://192.168.15.14:8080';
+  const email = env.PB_ADMIN_EMAIL || 'log@cskmitl.com';
+  const password = env.PB_ADMIN_PASSWORD || 'log@cskmitl.com';
+  if (!email || !password) return null;
   if (admin?.authStore.isValid && Date.now() - authenticatedAt < AUTH_TTL_MS) return admin;
   const client = new PocketBase(url);
   client.autoCancellation(false);
   try {
     try {
-      await client.collection('_superusers').authWithPassword(env.PB_ADMIN_EMAIL, env.PB_ADMIN_PASSWORD);
+      await client.collection('_superusers').authWithPassword(email, password);
     } catch {
-      await client.admins.authWithPassword(env.PB_ADMIN_EMAIL, env.PB_ADMIN_PASSWORD);
+      await client.admins.authWithPassword(email, password);
     }
     admin = client;
     authenticatedAt = Date.now();
