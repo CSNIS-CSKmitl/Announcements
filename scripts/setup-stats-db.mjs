@@ -8,7 +8,7 @@ await pb.collection('_superusers').authWithPassword(process.env.PB_ADMIN_EMAIL, 
 const announcements = await pb.collections.getOne('announcements');
 const users = await pb.collections.getOne('users');
 const schema = {
-  name: 'announcement_reads', type: 'base', listRule: null, viewRule: null, createRule: null, updateRule: null, deleteRule: null,
+  name: 'announcement_reads', type: 'base', listRule: '@request.auth.id != ""', viewRule: '@request.auth.id != ""', createRule: null, updateRule: null, deleteRule: null,
   fields: [
     { type: 'relation', name: 'announcement', required: true, collectionId: announcements.id, maxSelect: 1, cascadeDelete: true },
     { type: 'text', name: 'revision', required: true, max: 100 },
