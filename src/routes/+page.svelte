@@ -259,7 +259,7 @@
             </p></Card.Content
           ><Card.Footer class="flex-wrap justify-between gap-3"
             ><span class="text-xs text-muted-foreground"
-              >แก้ไขล่าสุด {formatDate(item.updated)}</span
+              >เพิ่มโดย {(item as any).expand?.created_by?.name || (item as any).expand?.created_by?.email || item.created_by || '-'} · แก้ไขโดย {(item as any).expand?.updated_by?.name || (item as any).expand?.updated_by?.email || item.updated_by || '-'}<br />แก้ไขล่าสุด {formatDate(item.updated)}</span
             >
             <div class="flex flex-wrap gap-2">
               <Button

@@ -13,7 +13,7 @@ export const load: PageServerLoad = async ({ locals }) => {
   const loadedAt = new Date().toISOString();
   let items: Announcement[] = [];
   try {
-    items = await locals.pb.collection('announcements').getFullList<Announcement>({ sort: '-updated' });
+    items = await locals.pb.collection('announcements').getFullList<Announcement>({ sort: '-updated', expand: 'created_by,updated_by,approved_by' });
   } catch (cause) {
     const status = (cause as { status?: number }).status;
     return {

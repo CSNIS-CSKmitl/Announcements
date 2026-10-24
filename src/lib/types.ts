@@ -4,6 +4,8 @@ export interface Announcement {
   status: 'draft' | 'published' | 'archived'; targets: string[];
   start_at: string; end_at: string; link_label: string; link_url: string; source_url: string;
   revision: string; created: string; updated: string;
+  created_by?: string; updated_by?: string; approved_by?: string; approved_at?: string;
+  expand?: { created_by?: AdminUser; updated_by?: AdminUser; approved_by?: AdminUser };
 }
 export interface AnnouncementRead {
   id: string;
