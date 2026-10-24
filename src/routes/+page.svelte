@@ -29,7 +29,6 @@
     targetLabel,
     priorityLabels,
     type Announcement,
-    type AnnouncementAuditLog,
   } from "$lib/types";
   import type { PageData, ActionData } from "./$types";
 
@@ -117,18 +116,6 @@
       : "";
   }
 
-  function auditLabel(action: string) {
-    return ({
-      "announcement.create": "สร้างประกาศ",
-      "announcement.update": "แก้ไขประกาศ",
-      "announcement.publish": "เผยแพร่ประกาศ",
-      "announcement.archive": "ปิดประกาศ",
-    } as Record<string, string>)[action] || action;
-  }
-
-  function auditActor(log: AnnouncementAuditLog) {
-    return log.expand?.actor?.name || log.expand?.actor?.email || log.actor || "ไม่ทราบผู้ใช้งาน";
-  }
 </script>
 
 <div class="flex flex-col gap-7">
@@ -259,7 +246,7 @@
             </p></Card.Content
           ><Card.Footer class="flex-wrap justify-between gap-3"
             ><span class="text-xs text-muted-foreground"
-              >เพิ่มโดย {(item as any).expand?.created_by?.name || (item as any).expand?.created_by?.email || item.created_by || '-'} · แก้ไขโดย {(item as any).expand?.updated_by?.name || (item as any).expand?.updated_by?.email || item.updated_by || '-'}<br />แก้ไขล่าสุด {formatDate(item.updated)}</span
+              >เพิ่มโดย {item.expand?.created_by?.name || item.expand?.created_by?.email || item.created_by || '-'} · แก้ไขโดย {item.expand?.updated_by?.name || item.expand?.updated_by?.email || item.updated_by || '-'}<br />อนุมัติโดย {item.expand?.approved_by?.name || item.expand?.approved_by?.email || item.approved_by || '-'}{item.approved_at ? ` · ${formatDate(item.approved_at)}` : ''}<br />แก้ไขล่าสุด {formatDate(item.updated)}</span
             >
             <div class="flex flex-wrap gap-2">
               <Button
@@ -321,28 +308,6 @@
           </ol></Card.Content
         ><Card.Footer></Card.Footer></Card.Root
       >
-      <Card.Root>
-        <Card.Header>
-          <Card.Title>ประวัติการทำรายการ</Card.Title>
-          <Card.Description>ตรวจสอบว่าใครสร้าง แก้ไข เผยแพร่ หรือปิดประกาศ</Card.Description>
-        </Card.Header>
-        <Card.Content>
-          {#if data.auditLogs?.length}
-            <div class="flex flex-col gap-3">
-              {#each data.auditLogs.slice(0, 12) as rawLog (rawLog.id)}
-                {@const log = rawLog as unknown as AnnouncementAuditLog}
-                <div class="border-b border-border pb-3 last:border-0 last:pb-0">
-                  <p class="text-sm font-medium">{auditLabel(log.action)}</p>
-                  <p class="text-xs text-muted-foreground">{auditActor(log)}</p>
-                  <p class="text-xs text-muted-foreground">{formatDate(log.created)}</p>
-                </div>
-              {/each}
-            </div>
-          {:else}
-            <p class="text-sm leading-relaxed text-muted-foreground">ยังไม่มีประวัติการทำรายการ หรือยังไม่ได้ติดตั้ง audit_logs</p>
-          {/if}
-        </Card.Content>
-      </Card.Root>
     </aside>
   </div>
 </div>

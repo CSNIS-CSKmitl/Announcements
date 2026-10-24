@@ -21,7 +21,7 @@ test('production manager verifies roles, publishing, validation, revision checks
       assert.equal((await post('/?/save', { ...values, link_url: 'javascript:alert(1)' }, cookie)).status, 400);
       const previous = mock.records.length;
       assert.equal((await post('/?/save', { ...values, start_at: '2030-01-01T09:30', end_at: '2030-01-02T09:30' }, cookie)).status, 200); assert.equal(mock.records.length, previous + 1);
-      const item = mock.records[0]; assert.equal(item.created_by, mock.users[role].id); assert.equal(item.start_at, '2030-01-01 02:30:00.000Z'); assert.deepEqual(item.targets, ['all']);
+      const item = mock.records[0]; assert.equal(item.created_by, mock.users[role].id); assert.equal(item.updated_by, mock.users[role].id); assert.equal(item.approved_by, mock.users[role].id); assert.ok(item.approved_at); assert.equal(item.start_at, '2030-01-01 02:30:00.000Z'); assert.deepEqual(item.targets, ['all']);
       assert.equal((await post('/?/save', { ...values, id: item.id, revision: 'stale' }, cookie)).status, 409);
       assert.equal((await post('/?/archive', { id: item.id, revision: item.revision }, cookie)).status, 200); assert.equal(item.status, 'archived');
     }

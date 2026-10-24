@@ -30,24 +30,30 @@ const schema = {
     { type: 'text', name: 'revision', required: true, max: 100 },
     { type: 'relation', name: 'created_by', hidden: true, collectionId: users.id, maxSelect: 1 },
     { type: 'relation', name: 'updated_by', hidden: true, collectionId: users.id, maxSelect: 1 },
+    { type: 'relation', name: 'approved_by', hidden: true, collectionId: users.id, maxSelect: 1 },
+    { type: 'date', name: 'approved_at', hidden: true },
     { type: 'autodate', name: 'created', onCreate: true, onUpdate: false },
     { type: 'autodate', name: 'updated', onCreate: true, onUpdate: true }
   ],
   indexes: ['CREATE INDEX idx_announcements_status_start ON announcements (status, start_at)']
 };
-const auditSchema = {
-  name: 'audit_logs', type: 'base', listRule: adminRule, viewRule: adminRule, createRule: null, updateRule: null, deleteRule: null,
-  fields: [
-    { type: 'text', name: 'service', required: true, max: 64 }, { type: 'text', name: 'action', required: true, max: 100 },
-    { type: 'relation', name: 'actor', collectionId: users.id, maxSelect: 1, cascadeDelete: false },
-    { type: 'text', name: 'record_id', required: true, max: 64 }, { type: 'json', name: 'before', maxSize: 20000 }, { type: 'json', name: 'after', maxSize: 20000 },
-    { type: 'autodate', name: 'created', onCreate: true, onUpdate: false }
-  ], indexes: ['CREATE INDEX idx_audit_logs_service_created ON audit_logs (service, created)', 'CREATE INDEX idx_audit_logs_record_created ON audit_logs (record_id, created)']
-};
 let existing;
 try { existing = await pb.collections.getOne('announcements'); } catch (cause) { if (cause.status !== 404) throw cause; }
 if (existing) {
-  for (const field of schema.fields) if (!existing.fields.some(item => item.name === field.name && item.type === field.type)) throw new Error(`Existing announcements.${field.name} differs. No changes made.`);
+  const actorFields = ['created_by', 'updated_by', 'approved_by', 'approved_at'];
+  const missingActorFields = schema.fields.filter(field => actorFields.includes(field.name) && !existing.fields.some(item => item.name === field.name));
+  for (const field of schema.fields) {
+    const current = existing.fields.find(item => item.name === field.name);
+    if (current && current.type !== field.type) throw new Error(`Existing announcements.${field.name} differs. No changes made.`);
+    if (!actorFields.includes(field.name) && !current) throw new Error(`Existing announcements.${field.name} is missing. No changes made.`);
+  }
+  if (missingActorFields.length) {
+    console.log(`Add missing actor fields to announcements: ${missingActorFields.map(field => field.name).join(', ')}.`);
+    if (!apply) { console.log('Dry run only. Add --apply to update the collection.'); process.exit(0); }
+    await pb.collections.update(existing.id, { fields: [...existing.fields, ...missingActorFields] });
+    existing = await pb.collections.getOne('announcements');
+    for (const field of missingActorFields) if (!existing.fields.some(item => item.name === field.name && item.type === field.type)) throw new Error(`announcements.${field.name} verification failed.`);
+  }
   const differingRules = ['listRule', 'viewRule', 'createRule', 'updateRule', 'deleteRule'].filter((key) => existing[key] !== schema[key]);
   if (differingRules.length) console.warn(`Preserving existing collection rules that differ from the template: ${differingRules.join(', ')}.`);
   const currentTargets = existing.fields.find((field) => field.name === 'targets');
@@ -89,9 +95,3 @@ if (apply && seed) {
     console.log('Moved the existing flood announcement into the central collection.');
   } else console.log('The existing flood announcement is already in the central collection.');
 }
-let existingAudit;
-try { existingAudit = await pb.collections.getOne('audit_logs'); } catch (cause) { if (cause.status !== 404) throw cause; }
-if (!existingAudit) {
-  console.log('Create audit_logs for immutable change history.');
-  if (apply) await pb.collections.create(auditSchema); else console.log('Dry run only. Add --apply to create audit_logs.');
-} else console.log('audit_logs is already configured.');

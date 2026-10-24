@@ -1,6 +1,6 @@
 import { json } from '@sveltejs/kit';
 import { createHash } from 'node:crypto';
-import { getAdmin, sourceIp } from '$lib/server/audit-log';
+import { getAdmin, sourceIp } from '$lib/server/pocketbase-admin';
 import type { RequestHandler } from './$types';
 
 const VALID_SITES = new Set(['initd', 'printer', 'booking', 'borrowly', 'android', 'csnis']);
