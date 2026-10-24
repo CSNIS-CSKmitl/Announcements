@@ -3,7 +3,7 @@ import { createHash } from 'node:crypto';
 import { getAdmin, sourceIp } from '$lib/server/pocketbase-admin';
 import type { RequestHandler } from './$types';
 
-const VALID_SITES = new Set(['initd', 'printer', 'booking', 'borrowly', 'android', 'csnis']);
+const VALID_SITES = new Set(['initd', 'printer', 'booking', 'borrowly', 'android', 'csnis', 'aipass']);
 
 export const GET: RequestHandler = async ({ locals }) => {
   if (!locals.user || !locals.user.isAdmin) {

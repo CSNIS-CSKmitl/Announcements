@@ -1,6 +1,6 @@
 export const priorities = ['info', 'important', 'emergency'];
 export const statuses = ['draft', 'published', 'archived'];
-export const targets = ['all', 'initd', 'printer', 'booking', 'borrowly', 'csnis', 'android'];
+export const targets = ['all', 'initd', 'printer', 'booking', 'borrowly', 'csnis', 'android', 'aipass'];
 /** @param {unknown} value */
 export function isAdminType(value) { return typeof value === 'string' && ['admin', 'superadmin'].includes(value.trim().toLowerCase()); }
 /** @param {unknown} value */

@@ -22,7 +22,8 @@ export const sites = [
   { id: 'booking', name: 'Booking' },
   { id: 'borrowly', name: 'Borrowly' },
   { id: 'csnis', name: 'CSNIS Portal' },
-  { id: 'android', name: 'Android app' }
+  { id: 'android', name: 'Android app' },
+  { id: 'aipass', name: 'AI Passport' }
 ] as const;
 export const priorityLabels = { info: 'ทั่วไป', important: 'สำคัญ', emergency: 'ฉุกเฉิน' } as const;
 export function displayState(item: Announcement, now = Date.now()) {

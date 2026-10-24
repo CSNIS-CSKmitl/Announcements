@@ -30,7 +30,8 @@ export const KNOWN_SITES = [
   { id: 'booking', name: 'Booking' },
   { id: 'borrowly', name: 'Borrowly' },
   { id: 'csnis', name: 'CSNIS Portal' },
-  { id: 'android', name: 'Android app' }
+  { id: 'android', name: 'Android app' },
+  { id: 'aipass', name: 'AI Passport' }
 ];
 
 /** @type {Array<{ id: TimeRange; label: string }>} */
