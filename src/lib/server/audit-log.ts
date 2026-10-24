@@ -58,3 +58,23 @@ export async function writeServiceAudit(event: RequestEvent, input: { userId?: s
     console.warn('[audit] Unable to store announcements access log:', error instanceof Error ? error.message : error);
   }
 }
+
+export async function writeAnnouncementAudit(input: {
+  actorId?: string | null;
+  action: 'create' | 'update' | 'publish' | 'archive';
+  recordId: string;
+  before?: unknown;
+  after?: unknown;
+}) {
+  const pb = await getAdmin();
+  if (!pb) return;
+  try {
+    await pb.collection('audit_logs').create({
+      service: 'announcements', action: `announcement.${input.action}`,
+      actor: input.actorId || undefined, record_id: input.recordId,
+      before: input.before || undefined, after: input.after || undefined
+    });
+  } catch (error) {
+    console.warn('[audit] Unable to store announcement change log:', error instanceof Error ? error.message : error);
+  }
+}

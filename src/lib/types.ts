@@ -14,6 +14,7 @@ export interface AnnouncementRead {
   viewer_hash: string;
   created: string;
 }
+export interface AnnouncementAuditLog { id: string; action: string; record_id: string; actor?: string; created: string; expand?: { actor?: { email?: string; name?: string } }; }
 export const sites = [
   { id: 'initd', name: 'init.d' },
   { id: 'printer', name: 'Printer-server' },

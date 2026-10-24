@@ -35,6 +35,15 @@ const schema = {
   ],
   indexes: ['CREATE INDEX idx_announcements_status_start ON announcements (status, start_at)']
 };
+const auditSchema = {
+  name: 'audit_logs', type: 'base', listRule: adminRule, viewRule: adminRule, createRule: null, updateRule: null, deleteRule: null,
+  fields: [
+    { type: 'text', name: 'service', required: true, max: 64 }, { type: 'text', name: 'action', required: true, max: 100 },
+    { type: 'relation', name: 'actor', collectionId: users.id, maxSelect: 1, cascadeDelete: false },
+    { type: 'text', name: 'record_id', required: true, max: 64 }, { type: 'json', name: 'before', maxSize: 20000 }, { type: 'json', name: 'after', maxSize: 20000 },
+    { type: 'autodate', name: 'created', onCreate: true, onUpdate: false }
+  ], indexes: ['CREATE INDEX idx_audit_logs_service_created ON audit_logs (service, created)', 'CREATE INDEX idx_audit_logs_record_created ON audit_logs (record_id, created)']
+};
 let existing;
 try { existing = await pb.collections.getOne('announcements'); } catch (cause) { if (cause.status !== 404) throw cause; }
 if (existing) {
@@ -80,3 +89,9 @@ if (apply && seed) {
     console.log('Moved the existing flood announcement into the central collection.');
   } else console.log('The existing flood announcement is already in the central collection.');
 }
+let existingAudit;
+try { existingAudit = await pb.collections.getOne('audit_logs'); } catch (cause) { if (cause.status !== 404) throw cause; }
+if (!existingAudit) {
+  console.log('Create audit_logs for immutable change history.');
+  if (apply) await pb.collections.create(auditSchema); else console.log('Dry run only. Add --apply to create audit_logs.');
+} else console.log('audit_logs is already configured.');
