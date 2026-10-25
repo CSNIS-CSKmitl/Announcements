@@ -41,7 +41,12 @@ export const load: PageServerLoad = async ({ locals }) => {
     readsConfigured = false;
   }
 
-  return { items, reads, readsConfigured, loadedAt, setupRequired: false, loadError: '' };
+  let services: { id: string; name: string }[] = [];
+  try {
+    services = await locals.pb.collection('services').getFullList<{ id: string; name: string }>({ sort: 'name', fields: 'id,name' });
+  } catch {}
+
+  return { items, reads, readsConfigured, loadedAt, setupRequired: false, loadError: '', services };
 };
 export const actions: Actions = {
   save: async ({ request, locals }) => {
@@ -55,6 +60,31 @@ export const actions: Actions = {
     if (Object.keys(result.errors).length) return fail(400, { ok: false, id, values: raw, errors: result.errors, message: 'กรุณาตรวจสอบข้อมูลประกาศ' });
     if (id && !/^[a-z0-9]{15}$/.test(id)) return fail(400, { ok: false, id, values: raw, errors: {}, message: 'รหัสประกาศไม่ถูกต้อง' });
     try {
+      let targetServices: string[] = [];
+      try {
+        const allServices = await locals.pb.collection('services').getFullList<{ id: string; name: string }>({ fields: 'id,name' });
+        if (result.data.targets.includes('all')) {
+          targetServices = allServices.map(s => s.id);
+        } else {
+          const slugMap: Record<string, string> = {
+            booking: 'Booking',
+            borrowly: 'Borrow Item',
+            initd: 'init.d',
+            printer: 'Printer Server',
+            csnis: 'CSNIS',
+            android: 'Android App',
+            aipass: 'AI-Passport',
+            jupyter: 'JupyterHub'
+          };
+          for (const t of result.data.targets) {
+            const match = allServices.find(s => s.id === t || s.name === slugMap[t] || s.name.toLowerCase().includes(t));
+            if (match && !targetServices.includes(match.id)) {
+              targetServices.push(match.id);
+            }
+          }
+        }
+      } catch {}
+
       if (id) {
         const current = await locals.pb.collection('announcements').getOne<Announcement>(id);
         if (!revision || current.revision !== revision) return fail(409, { ok: false, id, values: raw, errors: {}, message: 'ประกาศนี้ถูกแก้ไขแล้ว กรุณาปิดหน้าต่างและเปิดแก้ไขใหม่' });
@@ -62,6 +92,7 @@ export const actions: Actions = {
         const isPublished = result.data.status === 'published';
         const next = {
           ...result.data,
+          target_services: targetServices,
           revision: randomUUID(),
           updated_by: locals.user!.id,
           ...(isPublished && !wasPublished ? { approved_by: locals.user!.id, approved_at: new Date().toISOString() } : {})
@@ -71,6 +102,7 @@ export const actions: Actions = {
       } else {
         const created = await locals.pb.collection('announcements').create<Announcement>({
           ...result.data,
+          target_services: targetServices,
           revision: randomUUID(),
           created_by: locals.user!.id,
           updated_by: locals.user!.id,

@@ -5,7 +5,8 @@ import {
   filterAnnouncements,
   isWithinRange,
   matchesDrilldown,
-  parseSafeTimestamp
+  parseSafeTimestamp,
+  KNOWN_SITES
 } from '../src/lib/stats.mjs';
 
 const NOW = Date.parse('2026-10-17T12:00:00.000Z');
@@ -170,8 +171,8 @@ test('calculates status counts, audience coverage, urgent count, and read rates 
   assert.equal(stats.urgentAndImportant, 3);
   assert.equal(stats.publishedCount, 3);
 
-  // Target site coverage: 'all' covers all 6 known applications
-  assert.equal(stats.targetSitesCount, 6);
+  // Target site coverage: 'all' covers all known applications
+  assert.equal(stats.targetSitesCount, KNOWN_SITES.length);
   assert.equal(stats.bySite.initd, 3); // 'all' + 'initd,printer' + 'initd'
   assert.equal(stats.bySite.printer, 3); // 'all' + 'initd,printer' + 'printer'
   assert.equal(stats.bySite.android, 2); // 'all' + 'android'

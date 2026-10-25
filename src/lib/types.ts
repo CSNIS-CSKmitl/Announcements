@@ -1,7 +1,7 @@
 export interface AdminUser { id: string; email: string; name: string; isAdmin: boolean; }
 export interface Announcement {
   id: string; title: string; body: string; priority: 'info' | 'important' | 'emergency';
-  status: 'draft' | 'published' | 'archived'; targets: string[];
+  status: 'draft' | 'published' | 'archived'; targets: string[]; target_services?: string[];
   start_at: string; end_at: string; link_label: string; link_url: string; source_url: string;
   revision: string; created: string; updated: string;
   created_by?: string; updated_by?: string; approved_by?: string; approved_at?: string;
