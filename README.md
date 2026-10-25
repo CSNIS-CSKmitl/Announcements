@@ -45,6 +45,11 @@ PB_ADMIN_EMAIL / PB_ADMIN_PASSWORD ใช้เฉพาะ CLI ติดตั�
 
 เพิ่มรหัสเว็บใน src/lib/types.ts, validation และ select targets ของ collection หลังสำรอง schema ใช้ endpoint ใน integrations/api-template.ts และ helpers ประกอบ component shadcn/native ตาม frontend ของเว็บใหม่ กำหนด SITE_ID และปรับ fallback เป็น null หากไม่มีประกาศสำรอง “ทุกเว็บ” รองรับเว็บใหม่หลังเชื่อมกับฐานข้อมูลนี้
 
+## เชื่อมต่อกับระบบ Services และ Audit Log
+
+- **การเชื่อมโยงกับ Services:** ประกาศเชื่อมต่อกับตาราง `services` โดยตรงผ่านฟิลด์ relation **`target_services`** ทำให้เมื่อมีระบบใหม่เพิ่มในตาราง `services` จะถูกนำมาใช้เป็นเป้าหมายประกาศได้ทันที (โดยยังคงฟิลด์ `targets` เดิมไว้เพื่อรองรับแอปพลิเคชันเดิม)
+- **Audit Logging:** ทุกครั้งที่มีการอนุมัติ เผยแพร่ หรือปิดประกาศ (`archive`) ระบบจะบันทึก Audit Action ลงในคอลเลกชันรวมศูนย์ **`admin_actions`** ทันที
+
 ## ตรวจและรัน production
 
 ```powershell
