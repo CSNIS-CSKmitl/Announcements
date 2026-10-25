@@ -17,6 +17,21 @@ export function sourceIp(event: RequestEvent): string {
 	});
 }
 
+/** Records who approved (published) / archived an announcement in the central admin_actions collection. Never throws. */
+export async function writeAdminAction(input: { actorId: string; action: 'approve' | 'archive' | 'delete'; targetId: string; targetLabel?: string; metadata?: Record<string, unknown> }) {
+	try {
+		const pb = await getAdmin();
+		if (!pb) return;
+		await pb.collection('admin_actions').create({
+			service: 'announcement', action: input.action, actor: input.actorId,
+			target_collection: 'announcements', target_id: input.targetId,
+			target_label: input.targetLabel?.slice(0, 256), metadata: input.metadata ?? {}
+		});
+	} catch (error) {
+		console.warn('Unable to store admin action:', error instanceof Error ? error.message : error);
+	}
+}
+
 export async function getAdmin(): Promise<PocketBase | null> {
 	const url = env.POCKETBASE_URL || 'http://192.168.15.14:8080';
 	const email = env.PB_ADMIN_EMAIL || 'log@cskmitl.com';

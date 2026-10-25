@@ -1,7 +1,7 @@
 import { error, fail, redirect } from '@sveltejs/kit';
 import { randomUUID } from 'node:crypto';
 import { validateAnnouncement } from '$lib/validation.mjs';
-import { getAdmin } from '$lib/server/pocketbase-admin';
+import { getAdmin, writeAdminAction } from '$lib/server/pocketbase-admin';
 import type { Announcement, AnnouncementRead } from '$lib/types';
 import type { Actions, PageServerLoad } from './$types';
 function requireAdmin(user: App.Locals['user']) {
@@ -67,14 +67,16 @@ export const actions: Actions = {
           ...(isPublished && !wasPublished ? { approved_by: locals.user!.id, approved_at: new Date().toISOString() } : {})
         };
         await locals.pb.collection('announcements').update(id, next);
+        if (isPublished && !wasPublished) await writeAdminAction({ actorId: locals.user!.id, action: 'approve', targetId: id, targetLabel: result.data.title });
       } else {
-        await locals.pb.collection('announcements').create<Announcement>({
+        const created = await locals.pb.collection('announcements').create<Announcement>({
           ...result.data,
           revision: randomUUID(),
           created_by: locals.user!.id,
           updated_by: locals.user!.id,
           ...(result.data.status === 'published' ? { approved_by: locals.user!.id, approved_at: new Date().toISOString() } : {})
         });
+        if (result.data.status === 'published') await writeAdminAction({ actorId: locals.user!.id, action: 'approve', targetId: created.id, targetLabel: result.data.title });
       }
     } catch { return fail(502, { ok: false, id, values: raw, errors: {}, message: 'บันทึกประกาศไม่ได้ กรุณาตรวจสอบการเชื่อมต่อและสิทธิ์' }); }
     return { ok: true, message: intent === 'published' ? 'เผยแพร่ประกาศแล้ว เว็บปลายทางจะตรวจพบในการโหลดหน้าหรือรอบตรวจถัดไป' : 'บันทึกประกาศแล้ว' };
@@ -89,6 +91,7 @@ export const actions: Actions = {
       if (!revision || item.revision !== revision) return fail(409, { ok: false, message: 'ประกาศถูกแก้ไขแล้ว กรุณาโหลดหน้าใหม่' });
       const next = { status: 'archived', revision: randomUUID(), updated_by: locals.user!.id };
       await locals.pb.collection('announcements').update(id, next);
+      await writeAdminAction({ actorId: locals.user!.id, action: 'archive', targetId: id, targetLabel: item.title });
     } catch { return fail(502, { ok: false, message: 'ปิดประกาศไม่ได้ กรุณาลองอีกครั้ง' }); }
     return { ok: true, message: 'ปิดประกาศแล้ว เว็บปลายทางจะหยุดแสดงในรอบตรวจถัดไป' };
   }
