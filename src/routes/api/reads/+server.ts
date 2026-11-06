@@ -3,15 +3,25 @@ import { createHash } from "node:crypto";
 import { getAdmin, sourceIp } from "$lib/server/pocketbase-admin";
 import type { RequestHandler } from "./$types";
 
-const VALID_SITES = new Set([
-  "initd",
-  "printer",
-  "booking",
-  "borrowly",
-  "android",
-  "csnis",
-  "aipass",
-]);
+const SITE_ID_MAP: Record<string, string> = {
+  booking: "utmqt5k92gmsodh",
+  borrowly: "3kzy4o7ckfcrsm9",
+  loan: "3kzy4o7ckfcrsm9",
+  "borrow-item": "3kzy4o7ckfcrsm9",
+  announcements: "ow2zg8jqdqai2t9",
+  announcement: "ow2zg8jqdqai2t9",
+  printer: "ytan4m3hbzj53zt",
+  "printer-server": "ytan4m3hbzj53zt",
+  initd: "r2e4nkzzi6mae93",
+  "init.d": "r2e4nkzzi6mae93",
+  "init-d": "r2e4nkzzi6mae93",
+  csnis: "i1xjo94dysy434b",
+  "csnis-portal": "i1xjo94dysy434b",
+  android: "2cfqpyms90uk8pf",
+  jupyterhub: "nmeunbwtz11fxde",
+  aipass: "pdvl438335wuv5h",
+  "ai-passport": "pdvl438335wuv5h",
+};
 
 export const GET: RequestHandler = async ({ locals }) => {
   if (!locals.user || !locals.user.isAdmin) {
@@ -60,7 +70,9 @@ export const POST: RequestHandler = async (event) => {
   const rawSite = String(payload.site || "initd")
     .trim()
     .toLowerCase();
-  const site = VALID_SITES.has(rawSite) ? rawSite : "initd";
+  const site =
+    SITE_ID_MAP[rawSite] ||
+    (/^[a-z0-9]{15}$/.test(rawSite) ? rawSite : SITE_ID_MAP["initd"]);
   const user =
     typeof payload.user === "string" && /^[a-z0-9]{15}$/.test(payload.user)
       ? payload.user

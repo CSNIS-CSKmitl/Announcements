@@ -33,7 +33,7 @@ export async function writeAdminAction(input: {
     const pb = await getAdmin();
     if (!pb) return;
     await pb.collection("admin_actions").create({
-      service: "announcement",
+      service: "ow2zg8jqdqai2t9", // Announcements relation in services
       action: input.action,
       actor: input.actorId,
       target_collection: "announcements",
