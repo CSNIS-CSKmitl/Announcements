@@ -15,12 +15,14 @@
     { name: "Printer Server", description: "บริการจัดการเครื่องพิมพ์และงานพิมพ์ส่วนกลาง", type: "Infrastructure", status: "พร้อมใช้งาน", icon: Printer, tone: "bg-slate-100 text-slate-700" }
   ];
 
-  let query = "";
-  let selected = "ทั้งหมด";
+  let query = $state("");
+  let selected = $state("ทั้งหมด");
   const filters = ["ทั้งหมด", "Web app", "Backend", "Mobile", "Infrastructure"];
-  $: filtered = services.filter((service) =>
-    (selected === "ทั้งหมด" || service.type === selected) &&
-    `${service.name} ${service.description}`.toLowerCase().includes(query.toLowerCase())
+  let filtered = $derived(
+    services.filter((service) =>
+      (selected === "ทั้งหมด" || service.type === selected) &&
+      `${service.name} ${service.description}`.toLowerCase().includes(query.toLowerCase())
+    )
   );
 </script>
 

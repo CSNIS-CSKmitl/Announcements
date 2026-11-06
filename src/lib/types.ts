@@ -1,4 +1,12 @@
-export interface AdminUser { id: string; email: string; name: string; isAdmin: boolean; }
+export interface AdminUser {
+  id: string;
+  email: string;
+  name: string;
+  username?: string;
+  role?: 'admin' | 'user';
+  roles?: string[];
+  isAdmin: boolean;
+}
 export interface Announcement {
   id: string; title: string; body: string; priority: 'info' | 'important' | 'emergency';
   status: 'draft' | 'published' | 'archived'; targets: string[]; target_services?: string[];
