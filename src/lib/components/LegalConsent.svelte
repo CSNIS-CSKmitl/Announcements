@@ -1,14 +1,150 @@
 <script lang="ts">
-  let { userId = null, enabled = true }: { userId?: string | null; enabled?: boolean } = $props();
-  let open = $state(false); let confirmed = $state(false); const serviceKey = 'announcements:legal-consent:v1';
-  let storageKey = $derived(`${serviceKey}:${userId ?? 'anonymous'}`);
-  $effect(() => { if (typeof localStorage !== 'undefined') { open = enabled && Boolean(userId) && localStorage.getItem(storageKey) !== 'accepted'; confirmed = false; } });
-  function accept() { if (!confirmed) return; localStorage.setItem(storageKey, 'accepted'); open = false; }
+  let {
+    userId = null,
+    enabled = true,
+  }: { userId?: string | null; enabled?: boolean } = $props();
+  let open = $state(false);
+  let confirmed = $state(false);
+  const serviceKey = "announcements:legal-consent:v1";
+  let storageKey = $derived(`${serviceKey}:${userId ?? "anonymous"}`);
+  $effect(() => {
+    if (typeof localStorage !== "undefined") {
+      open =
+        enabled &&
+        Boolean(userId) &&
+        localStorage.getItem(storageKey) !== "accepted";
+      confirmed = false;
+    }
+  });
+  function accept() {
+    if (!confirmed) return;
+    localStorage.setItem(storageKey, "accepted");
+    open = false;
+  }
 </script>
-{#if open}<div class="backdrop"><dialog open class="dialog" aria-labelledby="consent-title"><p class="kicker">ก่อนเริ่มใช้งาน</p><h2 id="consent-title">กรุณาอ่านและยอมรับเอกสารของบริการ</h2><p class="copy">กรุณาอ่านนโยบายความเป็นส่วนตัวและข้อกำหนดการใช้งานก่อนดำเนินการต่อ</p><div class="links"><a href="/privacy" target="_blank" rel="noopener noreferrer">นโยบายความเป็นส่วนตัว ↗</a><a href="/terms" target="_blank" rel="noopener noreferrer">ข้อกำหนดการใช้งาน ↗</a></div><label class="check"><input type="checkbox" bind:checked={confirmed} /> ฉันได้อ่านและยอมรับเอกสารทั้งสองฉบับ</label><button disabled={!confirmed} onclick={accept}>ยอมรับและเริ่มใช้งาน</button></dialog></div>{/if}
+
+{#if open}<div class="backdrop">
+    <dialog open class="dialog" aria-labelledby="consent-title">
+      <p class="kicker">ก่อนเริ่มใช้งาน</p>
+      <h2 id="consent-title">กรุณาอ่านและยอมรับเอกสารของบริการ</h2>
+      <p class="copy">
+        กรุณาอ่านนโยบายความเป็นส่วนตัวและข้อกำหนดการใช้งานก่อนดำเนินการต่อ
+      </p>
+      <div class="links">
+        <a href="/privacy" target="_blank" rel="noopener noreferrer"
+          >นโยบายความเป็นส่วนตัว ↗</a
+        ><a href="/terms" target="_blank" rel="noopener noreferrer"
+          >ข้อกำหนดการใช้งาน ↗</a
+        >
+      </div>
+      <label class="check"
+        ><input type="checkbox" bind:checked={confirmed} /> ฉันได้อ่านและยอมรับเอกสารทั้งสองฉบับ</label
+      ><button disabled={!confirmed} onclick={accept}
+        >ยอมรับและเริ่มใช้งาน</button
+      >
+    </dialog>
+  </div>{/if}
+
 <style>
-  .dialog { position: relative; inset: auto; margin: 0; }
-  .backdrop{position:fixed;inset:0;z-index:10000;display:grid;place-items:center;padding:clamp(.75rem,3vw,1.5rem);background:rgb(0 0 0 / .68)}
-  .dialog{width:min(100%,30rem);max-height:calc(100dvh - 1.5rem);overflow-y:auto;border:1px solid var(--border);border-radius:1rem;background:var(--card);color:var(--foreground);padding:clamp(1rem,4vw,1.5rem);box-shadow:0 1.5rem 4rem rgb(0 0 0 / .35)}
-  .kicker{margin:0 0 .4rem;color:var(--muted-foreground);font-size:.72rem;font-weight:700;letter-spacing:.08em}.dialog h2{margin:0;font-size:1.15rem}.copy{margin:.75rem 0 1rem;color:var(--muted-foreground);font-size:.9rem;line-height:1.6}.links{display:flex;flex-wrap:wrap;gap:.75rem 1.2rem;margin-bottom:1.1rem}.links a{color:var(--primary);font-size:.85rem;text-decoration:underline;text-underline-offset:3px}.check{display:flex;gap:.55rem;align-items:flex-start;font-size:.85rem;line-height:1.45}.check input{appearance:none;width:1.1rem;height:1.1rem;flex:0 0 1.1rem;margin:.15rem 0 0;border:2px solid var(--primary);border-radius:.25rem;background:var(--card);display:grid;place-content:center}.check input::before{content:'✓';font-size:.8rem;font-weight:800;color:var(--primary-foreground);transform:scale(0);line-height:1}.check input:checked{background:var(--primary)}.check input:checked::before{transform:scale(1)}.dialog button{width:100%;margin-top:1.25rem;border:0;border-radius:.65rem;padding:.7rem 1rem;background:var(--primary);color:var(--primary-foreground);font-weight:700}.dialog button:disabled{cursor:not-allowed;opacity:.45}
+  .dialog {
+    position: relative;
+    inset: auto;
+    margin: 0;
+  }
+  .backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    display: grid;
+    place-items: center;
+    padding: clamp(0.75rem, 3vw, 1.5rem);
+    background: rgb(0 0 0 / 0.68);
+  }
+  .dialog {
+    width: min(100%, 30rem);
+    max-height: calc(100dvh - 1.5rem);
+    overflow-y: auto;
+    border: 1px solid var(--border);
+    border-radius: 1rem;
+    background: var(--card);
+    color: var(--foreground);
+    padding: clamp(1rem, 4vw, 1.5rem);
+    box-shadow: 0 1.5rem 4rem rgb(0 0 0 / 0.35);
+  }
+  .kicker {
+    margin: 0 0 0.4rem;
+    color: var(--muted-foreground);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+  }
+  .dialog h2 {
+    margin: 0;
+    font-size: 1.15rem;
+  }
+  .copy {
+    margin: 0.75rem 0 1rem;
+    color: var(--muted-foreground);
+    font-size: 0.9rem;
+    line-height: 1.6;
+  }
+  .links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem 1.2rem;
+    margin-bottom: 1.1rem;
+  }
+  .links a {
+    color: var(--primary);
+    font-size: 0.85rem;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .check {
+    display: flex;
+    gap: 0.55rem;
+    align-items: flex-start;
+    font-size: 0.85rem;
+    line-height: 1.45;
+  }
+  .check input {
+    appearance: none;
+    width: 1.1rem;
+    height: 1.1rem;
+    flex: 0 0 1.1rem;
+    margin: 0.15rem 0 0;
+    border: 2px solid var(--primary);
+    border-radius: 0.25rem;
+    background: var(--card);
+    display: grid;
+    place-content: center;
+  }
+  .check input::before {
+    content: "✓";
+    font-size: 0.8rem;
+    font-weight: 800;
+    color: var(--primary-foreground);
+    transform: scale(0);
+    line-height: 1;
+  }
+  .check input:checked {
+    background: var(--primary);
+  }
+  .check input:checked::before {
+    transform: scale(1);
+  }
+  .dialog button {
+    width: 100%;
+    margin-top: 1.25rem;
+    border: 0;
+    border-radius: 0.65rem;
+    padding: 0.7rem 1rem;
+    background: var(--primary);
+    color: var(--primary-foreground);
+    font-weight: 700;
+  }
+  .dialog button:disabled {
+    cursor: not-allowed;
+    opacity: 0.45;
+  }
 </style>

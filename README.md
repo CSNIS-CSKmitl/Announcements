@@ -75,7 +75,6 @@ Android รับหนึ่งครั้งต่อประกาศแล
 
 Backend ใช้โปรเจกต์ `../cskmitl-android-backend` และ migration `1790450000_add_announcement_push.js` เพื่อเพิ่ม target Android และคิวรายอุปกรณ์ ต้องติดตั้ง backend นี้ก่อนเลือก Android ในระบบจริง
 
-
 ## GitHub Actions deploy
 
 วิธีตั้งค่า SSH, ENV_FILE, PM2 และ deploy อัตโนมัติ: [คู่มือ deploy](https://github.com/CSNIS-CSKmitl/Docs/blob/main/Projects/announcements/docs/DEPLOY.md)
@@ -84,4 +83,3 @@ Backend ใช้โปรเจกต์ `../cskmitl-android-backend` และ
 
 - [นโยบายความเป็นส่วนตัว](https://announcements.cskmitl.com/privacy)
 - [ข้อกำหนดการใช้งาน](https://announcements.cskmitl.com/terms)
-
