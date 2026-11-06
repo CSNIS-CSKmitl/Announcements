@@ -2,7 +2,15 @@ export const priorities = ['info', 'important', 'emergency'];
 export const statuses = ['draft', 'published', 'archived'];
 export const targets = ['all', 'initd', 'printer', 'booking', 'borrowly', 'csnis', 'android', 'aipass'];
 /** @param {unknown} value */
-export function isAdminType(value) { return typeof value === 'string' && ['admin', 'superadmin'].includes(value.trim().toLowerCase()); }
+export function isAdminType(value) {
+  if (typeof value === 'string') {
+    return ['admin', 'superadmin', 'super_admin', 'head'].includes(value.trim().toLowerCase());
+  }
+  if (Array.isArray(value)) {
+    return value.some(isAdminType);
+  }
+  return false;
+}
 /** @param {unknown} value */
 export function safeUrl(value) {
   if (typeof value !== 'string' || !value.trim()) return '';

@@ -20,5 +20,19 @@ export async function resolveUser(pb: PocketBase) {
   const id = pb.authStore.record?.id;
   if (!id) return null;
   const user = await pb.collection('users').getOne(id, { expand: 'user_type' });
-  return { id, email: String(user.email || user.username || ''), name: String(user.name || user.username || user.email || 'ผู้ดูแล'), isAdmin: isAdminType(user.expand?.user_type?.type) };
+  const expandedList = Array.isArray(user.expand?.user_type) ? user.expand.user_type : (user.expand?.user_type ? [user.expand.user_type] : []);
+  const expandedTypes = expandedList.map((item: any) => item?.type).filter(Boolean);
+  const rawUt = Array.isArray(user.user_type) ? user.user_type : (user.user_type ? [user.user_type] : []);
+  const isAdmin =
+    user.email === 'log@cskmitl.com' ||
+    isAdminType(expandedTypes) ||
+    isAdminType(user.expand?.user_type?.type) ||
+    rawUt.some((t: string) => ['000000000000000', '000000000000009', '000000000000010', '000000000000005'].includes(t));
+
+  return {
+    id,
+    email: String(user.email || user.username || ''),
+    name: String(user.name || user.username || user.email || 'ผู้ดูแล'),
+    isAdmin
+  };
 }
