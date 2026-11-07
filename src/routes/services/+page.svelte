@@ -53,7 +53,8 @@
       <div class="mb-6 flex flex-wrap gap-2">{#each filters as filter}<Button variant={selected === filter ? "default" : "outline"} size="sm" onclick={() => selected = filter}>{filter}</Button>{/each}</div>
       <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {#each filtered as service}
-          <Card class="transition hover:-translate-y-1 hover:shadow-md"><CardHeader><div class="flex items-start justify-between"><div class={`grid size-11 place-items-center rounded-xl ${service.tone}`}><svelte:component this={service.icon} class="size-5" /></div><Badge variant="outline" class="text-emerald-700">{service.status}</Badge></div><CardTitle class="mt-5">{service.name}</CardTitle></CardHeader><CardContent><p class="min-h-12 text-sm leading-6 text-slate-500">{service.description}</p></CardContent><CardFooter class="justify-between border-t pt-4 text-sm"><span class="text-slate-500">{service.type}</span><Button variant="ghost" size="sm">เปิดระบบ <ArrowRight class="ml-1 size-4" /></Button></CardFooter></Card>
+          {@const Icon = service.icon}
+          <Card class="transition hover:-translate-y-1 hover:shadow-md"><CardHeader><div class="flex items-start justify-between"><div class={`grid size-11 place-items-center rounded-xl ${service.tone}`}><Icon class="size-5" /></div><Badge variant="outline" class="text-emerald-700">{service.status}</Badge></div><CardTitle class="mt-5">{service.name}</CardTitle></CardHeader><CardContent><p class="min-h-12 text-sm leading-6 text-slate-500">{service.description}</p></CardContent><CardFooter class="justify-between border-t pt-4 text-sm"><span class="text-slate-500">{service.type}</span><Button variant="ghost" size="sm">เปิดระบบ <ArrowRight class="ml-1 size-4" /></Button></CardFooter></Card>
         {:else}<div class="col-span-full rounded-xl border border-dashed bg-white p-12 text-center text-slate-500">ไม่พบระบบที่ค้นหา</div>{/each}
       </div>
     </section>
