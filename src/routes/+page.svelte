@@ -118,19 +118,19 @@
 
 </script>
 
-<div class="flex flex-col gap-7">
+<div class="flex flex-col gap-6">
   <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
-    <div class="flex flex-col gap-2">
-      <p class="text-sm font-medium text-primary">ศูนย์ประกาศกลาง</p>
-
-      <p class="text-sm leading-relaxed text-muted-foreground">
-        จัดการข่าวสำคัญ เลือกปลายทางประกาศ และกำหนดเวลาแสดงผล
+    <div class="flex flex-col gap-1.5">
+      <span class="font-mono text-xs text-primary">CS KMITL · ศูนย์ประกาศกลาง</span>
+      <h1 class="text-2xl font-semibold tracking-tight text-foreground">จัดการและเผยแพร่ข่าวสาร</h1>
+      <p class="text-xs leading-relaxed text-muted-foreground">
+        จัดการข่าวสารสำคัญ เลือกปลายทางระบบเป้าหมาย และกำหนดกรอบเวลาแสดงผล
       </p>
     </div>
     <Button
       onclick={() => edit(null)}
       disabled={data.setupRequired || !!data.loadError}
-      class="min-h-11"><Plus data-icon="inline-start" />สร้างประกาศใหม่</Button
+      class="h-9 px-4 text-xs font-medium"><Plus data-icon="inline-start" />สร้างประกาศใหม่</Button
     >
   </div>
   {#if data.setupRequired}<Alert.Root
@@ -172,10 +172,10 @@
           aria-label="ค้นหาประกาศ"
           placeholder="ค้นหาหัวข้อหรือข้อความ…"
           bind:value={search}
-          class="min-h-11"
+          class="h-9 text-xs"
         /><Select.Root type="single" bind:value={filter}
           ><Select.Trigger
-            class="min-h-11 w-full sm:w-48"
+            class="h-9 w-full sm:w-48 text-xs"
             aria-label="กรองสถานะ"
             >{filterLabelMap[filter] || "ทุกสถานะ"}</Select.Trigger
           ><Select.Content
@@ -190,7 +190,7 @@
           onclick={refresh}
           disabled={refreshing}
           aria-label="โหลดประกาศใหม่"
-          class="min-h-11"><RefreshCw data-icon="inline-start" />รีเฟรช</Button
+          class="h-9 text-xs font-medium"><RefreshCw data-icon="inline-start" />รีเฟรช</Button
         >
       </div>
       <div class="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
