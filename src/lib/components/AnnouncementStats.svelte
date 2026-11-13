@@ -1,4 +1,4 @@
-<script lang="ts">
+﻿<script lang="ts">
   import * as Card from '$lib/components/ui/card';
   import { Badge } from '$lib/components/ui/badge';
   import { Button } from '$lib/components/ui/button';
@@ -145,7 +145,7 @@
       >
         <span
           class="size-2 rounded-full {realtime
-            ? 'animate-pulse bg-emerald-500'
+            ? ' bg-emerald-500'
             : 'bg-muted-foreground'}"
         ></span>
         {realtime ? 'Realtime' : 'Snapshot'}
@@ -227,10 +227,10 @@
           type="button"
           onclick={() => selectCard(stat.key)}
           aria-pressed={selected}
-          class="group text-left focus-visible:outline-2 focus-visible:outline-primary rounded-xl transition-all"
+          class="group text-left focus-visible:outline-2 focus-visible:outline-primary rounded-xl transition-colors"
         >
           <Card.Root
-            class="h-full transition-all hover:border-primary/60 {selected
+            class="h-full transition-colors hover:border-primary/60 {selected
               ? 'border-primary ring-2 ring-primary/25 bg-primary/5'
               : ''}"
           >
@@ -347,12 +347,12 @@
               <div class="flex flex-1 flex-col items-center gap-1">
                 <div class="flex w-full items-end justify-center gap-1 h-20">
                   <div
-                    class="w-2.5 rounded-t bg-primary transition-all"
+                    class="w-2.5 rounded-t bg-primary transition-colors"
                     style="height: {point.announcements > 0 ? annHeight : 3}px; opacity: {point.announcements > 0 ? 1 : 0.25}"
                     title="{point.label}: ประกาศ {point.announcements} รายการ"
                   ></div>
                   <div
-                    class="w-2.5 rounded-t bg-emerald-500 transition-all"
+                    class="w-2.5 rounded-t bg-emerald-500 transition-colors"
                     style="height: {point.reads > 0 ? readHeight : 3}px; opacity: {point.reads > 0 ? 1 : 0.25}"
                     title="{point.label}: การอ่าน {point.reads} ครั้ง"
                   ></div>
