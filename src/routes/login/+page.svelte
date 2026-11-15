@@ -71,7 +71,7 @@
       {#if data.oidc}<Button
           href="/auth/oidc"
           variant="outline"
-          class="mt-3 min-h-11 w-full">เข้าสู่ระบบด้วย KMITL SSO</Button
+          class="mt-3 min-h-11 w-full">Login with Google</Button
         >{/if}
     </Card.Content><Card.Footer
       ><p class="text-xs leading-relaxed text-muted-foreground">

@@ -32,8 +32,8 @@
   <header class="border-b bg-white">
     <div class="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
       <a href="/services" class="flex items-center gap-2 font-bold tracking-tight"><span class="grid size-9 place-items-center rounded-xl bg-teal-700 text-lg text-white">✦</span> CS-Proj Services</a>
-      <nav class="hidden items-center gap-6 text-sm text-slate-500 md:flex"><a class="font-semibold text-slate-900" href="#services">บริการทั้งหมด</a><a href="#about">เกี่ยวกับระบบ</a></nav>
-      <Button variant="outline" size="sm">เข้าสู่ระบบ</Button>
+      <nav class="hidden items-center gap-6 text-sm text-slate-500 md:flex"><a class="font-semibold text-slate-900" href="#services">บริการทั้งหมด</a></nav>
+      <Button href="/login" variant="outline" size="sm">เข้าสู่ระบบ</Button>
     </div>
   </header>
 
