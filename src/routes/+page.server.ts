@@ -203,7 +203,8 @@ export const actions: Actions = {
             targetLabel: result.data.title,
           });
       }
-    } catch {
+    } catch (cause) {
+      console.error("Failed to save announcement:", cause);
       return fail(502, {
         ok: false,
         id,
@@ -248,7 +249,8 @@ export const actions: Actions = {
         targetId: id,
         targetLabel: item.title,
       });
-    } catch {
+    } catch (cause) {
+      console.error("Failed to archive announcement:", cause);
       return fail(502, {
         ok: false,
         message: "ปิดประกาศไม่ได้ กรุณาลองอีกครั้ง",

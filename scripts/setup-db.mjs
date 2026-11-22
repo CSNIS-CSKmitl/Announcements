@@ -20,7 +20,7 @@ if (!userTypeField?.collectionId)
 const roles = await pb.collection(userTypeField.collectionId).getFullList();
 const adminRoleIds = roles
   .filter((role) =>
-    ["admin", "superadmin"].includes(
+    ["admin", "superadmin", "super_admin", "head"].includes(
       String(role.type || "")
         .trim()
         .toLowerCase(),
@@ -29,9 +29,13 @@ const adminRoleIds = roles
   .map((role) => role.id);
 if (!adminRoleIds.length)
   throw new Error("No admin or superadmin user types found. No changes made.");
+const roleExpr =
+  (userTypeField.maxSelect ?? 1) > 1
+    ? "@request.auth.user_type.id ?="
+    : "@request.auth.user_type =";
 const adminRule =
   '@request.auth.id != "" && (' +
-  adminRoleIds.map((id) => `@request.auth.user_type = "${id}"`).join(" || ") +
+  adminRoleIds.map((id) => `${roleExpr} "${id}"`).join(" || ") +
   ")";
 const activeRule =
   'status = "published" && (start_at = "" || start_at <= @now) && (end_at = "" || end_at > @now)';
@@ -40,7 +44,7 @@ const schema = {
   type: "base",
   listRule: `(${adminRule}) || (${activeRule})`,
   viewRule: `(${adminRule}) || (${activeRule})`,
-  createRule: `${adminRule} && @request.body.created_by = @request.auth.id`,
+  createRule: adminRule,
   updateRule: `${adminRule} && @request.body.created_by:isset = false`,
   deleteRule: null,
   fields: [
@@ -64,7 +68,7 @@ const schema = {
       type: "select",
       name: "targets",
       required: true,
-      maxSelect: 7,
+      maxSelect: 8,
       values: [
         "all",
         "initd",
@@ -73,6 +77,7 @@ const schema = {
         "borrowly",
         "csnis",
         "android",
+        "aipass",
       ],
     },
     { type: "date", name: "start_at" },
