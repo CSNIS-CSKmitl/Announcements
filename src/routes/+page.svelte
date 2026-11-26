@@ -9,6 +9,8 @@
   import { Input } from "$lib/components/ui/input";
   import { Button } from "$lib/components/ui/button";
   import { Badge } from "$lib/components/ui/badge";
+  import { Spinner } from "$lib/components/ui/spinner";
+  import { toast } from "$lib/toast";
   import {
     Plus,
     RefreshCw,
@@ -43,7 +45,8 @@
     editorErrors = $state<Record<string, string>>({}),
     editorMessage = $state("");
   let now = $state(Date.now()),
-    refreshing = $state(false);
+    refreshing = $state(false),
+    archivingId = $state<string | null>(null);
 
   const filterOptions: Array<{ value: DrilldownFilter; label: string }> = [
     { value: "all", label: "ทุกสถานะ" },
@@ -96,11 +99,14 @@
     editorOpen = true;
   }
 
-  async function refresh() {
+  async function refresh(notify = false) {
     refreshing = true;
     try {
       await invalidateAll();
       now = Date.now();
+      if (notify) toast.success("อัปเดตข้อมูลประกาศล่าสุดแล้ว");
+    } catch {
+      if (notify) toast.error("รีเฟรชข้อมูลไม่สำเร็จ กรุณาลองอีกครั้ง");
     } finally {
       refreshing = false;
     }
@@ -163,7 +169,7 @@
     error={data.loadError}
     setupRequired={data.setupRequired}
     lastUpdated={data.loadedAt}
-    onRefresh={refresh}
+    onRefresh={() => refresh(true)}
   />
   <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_280px]">
     <section class="flex min-w-0 flex-col gap-4" aria-label="รายการประกาศ">
@@ -172,7 +178,7 @@
           aria-label="ค้นหาประกาศ"
           placeholder="ค้นหาหัวข้อหรือข้อความ…"
           bind:value={search}
-          class="min-h-11"
+          class="min-h-11 flex-1"
         /><Select.Root type="single" bind:value={filter}
           ><Select.Trigger
             class="min-h-11 w-full sm:w-48"
@@ -187,10 +193,10 @@
           ></Select.Root
         ><Button
           variant="outline"
-          onclick={refresh}
+          onclick={() => refresh(true)}
           disabled={refreshing}
           aria-label="โหลดประกาศใหม่"
-          class="min-h-11"><RefreshCw data-icon="inline-start" />รีเฟรช</Button
+          class="min-h-11"><RefreshCw data-icon="inline-start" class={refreshing ? "animate-spin" : ""} />รีเฟรช</Button
         >
       </div>
       <div class="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
@@ -211,6 +217,36 @@
           </button>
         {/if}
       </div>
+      {#if refreshing && visible.length === 0}
+        <div class="flex flex-col gap-4" aria-busy="true" aria-label="กำลังโหลดรายการประกาศ">
+          {#each Array(3) as _, i (i)}
+            <Card.Root class="animate-pulse">
+              <Card.Header>
+                <div class="mb-2 flex items-center gap-2">
+                  <div class="h-5 w-16 rounded-full bg-muted"></div>
+                  <div class="h-5 w-20 rounded-full bg-muted"></div>
+                </div>
+                <div class="h-5 w-2/3 rounded bg-muted"></div>
+                <div class="mt-2 h-3.5 w-40 rounded bg-muted"></div>
+              </Card.Header>
+              <Card.Content>
+                <div class="space-y-2">
+                  <div class="h-3.5 w-full rounded bg-muted"></div>
+                  <div class="h-3.5 w-5/6 rounded bg-muted"></div>
+                </div>
+                <div class="mt-4 h-3 w-52 rounded bg-muted"></div>
+              </Card.Content>
+              <Card.Footer class="justify-between gap-3">
+                <div class="h-8 w-48 rounded bg-muted"></div>
+                <div class="flex gap-2">
+                  <div class="h-11 w-24 rounded-md bg-muted"></div>
+                  <div class="h-11 w-28 rounded-md bg-muted"></div>
+                </div>
+              </Card.Footer>
+            </Card.Root>
+          {/each}
+        </div>
+      {:else}
       {#each visible as item (item.id)}
         {@const state = displayState(item, now)}
         <Card.Root
@@ -257,14 +293,44 @@
               >{#if item.status !== "archived"}<form
                   method="POST"
                   action="?/archive"
-                  use:enhance
+                  use:enhance={() => {
+                    archivingId = item.id;
+                    return async ({ result, update }) => {
+                      try {
+                        await update();
+                        if (result.type === "success") {
+                          const msg =
+                            result.data && typeof result.data === "object" && "message" in result.data
+                              ? String(result.data.message || "")
+                              : "";
+                          toast.success(msg || "ปิดประกาศแล้ว");
+                        } else if (result.type === "failure") {
+                          const msg =
+                            result.data && typeof result.data === "object" && "message" in result.data
+                              ? String(result.data.message || "")
+                              : "";
+                          toast.error(msg || "ปิดประกาศไม่สำเร็จ");
+                        } else if (result.type === "error") {
+                          toast.error("เกิดข้อผิดพลาดในการปิดประกาศ");
+                        }
+                      } finally {
+                        archivingId = null;
+                      }
+                    };
+                  }}
                 >
                   <input type="hidden" name="id" value={item.id} /><input
                     type="hidden"
                     name="revision"
                     value={item.revision}
-                  /><Button type="submit" variant="ghost" class="min-h-11"
-                    ><Archive data-icon="inline-start" />ปิดประกาศ</Button
+                  /><Button
+                    type="submit"
+                    variant="ghost"
+                    disabled={archivingId === item.id}
+                    class="min-h-11"
+                    >{#if archivingId === item.id}<Spinner
+                        data-icon="inline-start"
+                      />{:else}<Archive data-icon="inline-start" />{/if}ปิดประกาศ</Button
                   >
                 </form>{/if}
             </div></Card.Footer
@@ -290,6 +356,7 @@
             ></Empty.Content
           ></Empty.Root
         >{/each}
+      {/if}
     </section>
     <aside class="flex flex-col gap-4">
       <Card.Root

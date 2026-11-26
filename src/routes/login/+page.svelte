@@ -7,6 +7,7 @@
   import { Button } from "$lib/components/ui/button";
   import { Spinner } from "$lib/components/ui/spinner";
   import { ShieldCheck, ArrowRight } from "@lucide/svelte";
+  import { toast } from "$lib/toast";
   import type { PageData, ActionData } from "./$types";
   let { data, form }: { data: PageData; form: ActionData } = $props();
   let pending = $state(false);
@@ -26,9 +27,18 @@
         method="POST"
         use:enhance={() => {
           pending = true;
-          return async ({ update }) => {
+          return async ({ result, update }) => {
             try {
               await update();
+              if (result.type === "failure") {
+                const msg =
+                  result.data && typeof result.data === "object" && "error" in result.data
+                    ? String(result.data.error || "")
+                    : "";
+                toast.error(msg || "เข้าสู่ระบบไม่สำเร็จ");
+              } else if (result.type === "error") {
+                toast.error("เกิดข้อผิดพลาดในการเข้าสู่ระบบ");
+              }
             } finally {
               pending = false;
             }

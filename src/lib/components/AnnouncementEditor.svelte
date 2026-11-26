@@ -12,6 +12,7 @@
   import { Eye, ExternalLink, Send, Save } from "@lucide/svelte";
   import { sites, priorityLabels, type Announcement } from "$lib/types";
   import { safeUrl } from "$lib/validation.mjs";
+  import { toast } from "$lib/toast";
   type Values = Record<string, unknown>;
   let {
     open = $bindable(false),
@@ -79,9 +80,24 @@
       action="?/save"
       use:enhance={() => {
         pending = true;
-        return async ({ update }) => {
+        return async ({ result, update }) => {
           try {
             await update({ reset: false });
+            if (result.type === "success") {
+              const msg =
+                result.data && typeof result.data === "object" && "message" in result.data
+                  ? String(result.data.message || "")
+                  : "";
+              toast.success(msg || "บันทึกประกาศแล้ว");
+            } else if (result.type === "failure") {
+              const msg =
+                result.data && typeof result.data === "object" && "message" in result.data
+                  ? String(result.data.message || "")
+                  : "";
+              toast.error(msg || "บันทึกประกาศไม่สำเร็จ");
+            } else if (result.type === "error") {
+              toast.error("เกิดข้อผิดพลาดในการบันทึกประกาศ");
+            }
           } finally {
             pending = false;
           }

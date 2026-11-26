@@ -24,6 +24,7 @@
     type TimeRange
   } from '$lib/stats.mjs';
   import { type Announcement, type AnnouncementRead } from '$lib/types';
+  import { toast } from '$lib/toast';
 
   let {
     items = [],
@@ -137,7 +138,14 @@
       <h2 class="text-base font-semibold">ภาพรวมสถิติประกาศ</h2>
       <button
         type="button"
-        onclick={() => (realtime = !realtime)}
+        onclick={() => {
+          realtime = !realtime;
+          toast.info(
+            realtime
+              ? 'เปิดโหมดอัปเดตอัตโนมัติ (Realtime)'
+              : 'สลับเป็นโหมดข้อมูลคงที่ (Snapshot)'
+          );
+        }}
         class="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium transition-colors {realtime
           ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
           : 'border-border bg-muted text-muted-foreground'}"
@@ -212,12 +220,35 @@
       </Card.Header>
     </Card.Root>
   {:else if loading && items.length === 0}
-    <Card.Root>
-      <Card.Content class="flex items-center justify-center gap-3 py-10 text-sm text-muted-foreground">
-        <RefreshCw class="size-4 animate-spin" />
-        <span>กำลังโหลดสถิติ...</span>
-      </Card.Content>
-    </Card.Root>
+    <div class="flex flex-col gap-4" aria-busy="true" aria-label="กำลังโหลดสถิติประกาศ">
+      <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7">
+        {#each Array(7) as _, i (i)}
+          <Card.Root class="animate-pulse">
+            <Card.Header class="flex-row items-start justify-between pb-2">
+              <div class="h-3.5 w-20 rounded bg-muted"></div>
+              <div class="size-4 rounded bg-muted"></div>
+            </Card.Header>
+            <Card.Content>
+              <div class="h-7 w-12 rounded bg-muted"></div>
+              <div class="mt-2 h-3 w-24 rounded bg-muted"></div>
+            </Card.Content>
+          </Card.Root>
+        {/each}
+      </div>
+      <div class="grid gap-4 lg:grid-cols-12">
+        {#each Array(3) as _, i (i)}
+          <Card.Root class="animate-pulse lg:col-span-4">
+            <Card.Header class="pb-2">
+              <div class="h-4 w-36 rounded bg-muted"></div>
+              <div class="mt-1.5 h-3 w-48 rounded bg-muted"></div>
+            </Card.Header>
+            <Card.Content>
+              <div class="h-20 w-full rounded-lg bg-muted"></div>
+            </Card.Content>
+          </Card.Root>
+        {/each}
+      </div>
+    </div>
   {:else}
     <!-- Clickable Drill-down Status Cards -->
     <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7">
@@ -344,7 +375,7 @@
             {#each computed.trend as point (point.key)}
               {@const annHeight = Math.max(4, Math.round((point.announcements / maxTrendValue) * 72))}
               {@const readHeight = Math.max(4, Math.round((point.reads / maxTrendValue) * 72))}
-              <div class="flex flex-1 flex-col items-center gap-1">
+              <div class="flex min-w-0 flex-1 flex-col items-center gap-1">
                 <div class="flex w-full items-end justify-center gap-1 h-20">
                   <div
                     class="w-2.5 rounded-t bg-primary transition-all"
