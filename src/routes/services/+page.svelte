@@ -177,7 +177,7 @@
         <h2 class="text-2xl font-bold">ระบบในโปรเจกต์</h2>
         <p class="mt-1 text-sm text-muted-foreground">เลือกเปิดใช้งานระบบที่ต้องการ</p>
       </div>
-      <div class="flex items-center gap-3">
+      <div class="flex flex-wrap items-center gap-2.5">
         <span class="text-sm text-muted-foreground">{filtered.length} ระบบ</span>
         <Button
           variant="outline"
@@ -190,6 +190,7 @@
           <RefreshCw aria-hidden="true" class="size-3.5 {loading ? 'animate-spin' : ''}" />
           รีเฟรช
         </Button>
+        <Button href="/login" variant="outline" size="sm" class="min-h-9">เข้าสู่ระบบ</Button>
       </div>
     </div>
 

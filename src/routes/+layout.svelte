@@ -1,8 +1,9 @@
 <script lang="ts">
   import '../app.css';
+  import { version } from '$app/environment';
   import { page } from '$app/state';
   import { fly } from 'svelte/transition';
-  import { Megaphone, LogOut, CheckCircle2, AlertCircle, Info, X } from '@lucide/svelte';
+  import { LogOut, CheckCircle2, AlertCircle, Info, X } from '@lucide/svelte';
   import { Button } from '$lib/components/ui/button';
   import { toast } from '$lib/toast';
   import type { LayoutData } from './$types';
@@ -11,11 +12,11 @@
   let { data, children }: { data: LayoutData; children: Snippet } = $props();
   let isLegalPage = $derived(['/privacy', '/terms'].includes(page.url.pathname.replace(/\/$/, '')));
 </script>
-<svelte:head><title>Announcements — ศูนย์ประกาศกลาง</title><meta name="robots" content="noindex" /><link rel="icon" href="/favicon.svg" /></svelte:head>
+<svelte:head><title>Announcements — ศูนย์ประกาศกลาง</title><meta name="robots" content="noindex" /><link rel="icon" type="image/png" href="/logocs.png" /></svelte:head>
 <div class="flex min-h-screen flex-col bg-background text-foreground">
   <header class="sticky top-0 z-40 border-b border-border bg-card/90 backdrop-blur-md">
     <div class="mx-auto flex min-h-18 max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-8">
-      <a href="/" class="flex items-center gap-3 font-semibold"><span class="flex size-10 items-center justify-center rounded-xl bg-primary text-primary-foreground"><Megaphone aria-hidden="true" class="size-5" /></span><span class="flex flex-col"><span>Announcements</span><span class="text-xs font-normal text-muted-foreground">ศูนย์ประกาศกลาง · CS KMITL</span></span></a>
+      <a href="/" class="flex items-center gap-3 font-semibold"><img src="/logocs.png" alt="CS KMITL Logo" loading="lazy" decoding="async" class="size-10 shrink-0 object-contain" /><span class="flex flex-col"><span>Announcements</span><span class="text-xs font-normal text-muted-foreground">ศูนย์ประกาศกลาง · CS KMITL</span></span></a>
       {#if data.user}<div class="flex items-center gap-3"><span class="hidden text-sm text-muted-foreground sm:block">{data.user.name}</span><form method="POST" action="/logout"><Button type="submit" variant="outline" aria-label="ออกจากระบบ" class="min-h-11"><LogOut data-icon="inline-start" /><span class="hidden sm:inline">ออกจากระบบ</span></Button></form></div>{/if}
     </div>
   </header>
@@ -25,7 +26,7 @@
     {/key}
   </main>
   <footer class="border-t border-border px-4 py-3 text-center text-[11px] text-muted-foreground">
-    <span>© {new Date().getFullYear()} · <a href="https://github.com/techasit5415" target="_blank" rel="noopener noreferrer" class="hover:text-foreground hover:underline">นาย เตชสิทธิ์ วาณิชภัทรกุล</a></span>
+    <span>© {new Date().getFullYear()} · <a href="https://github.com/techasit5415" target="_blank" rel="noopener noreferrer" class="hover:text-foreground hover:underline">นาย เตชสิทธิ์ วาณิชภัทรกุล</a> · <span class="font-mono tabular-nums" title="Semantic Versioning: MAJOR.MINOR.PATCH">v{version}</span></span>
     <nav aria-label="นโยบายและข้อกำหนด" class="mt-1 flex flex-wrap items-center justify-center gap-x-4 gap-y-0">
       <a href="/privacy" class="inline-flex min-h-7 items-center underline underline-offset-4 hover:text-foreground">นโยบายความเป็นส่วนตัว</a>
       <a href="/terms" class="inline-flex min-h-7 items-center underline underline-offset-4 hover:text-foreground">ข้อกำหนดการใช้งาน</a>
